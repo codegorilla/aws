@@ -1,0 +1,46 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Network stack
+
+Resources:
+  NetworkVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.1.0/24
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: "network-vpc"
+
+  NetworkSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}a"
+      CidrBlock: 10.0.1.0/26
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref NetworkVPC
+      Tags:
+        - Key: Name
+          Value: "network-a-subnet"
+
+  NetworkSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}b"
+      CidrBlock: 10.0.1.64/26
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref NetworkVPC
+      Tags:
+        - Key: Name
+          Value: "network-b-subnet"
+
+  NetworkSubnet3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}c"
+      CidrBlock: 10.0.1.128/26
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref NetworkVPC
+      Tags:
+        - Key: Name
+          Value: "network-c-subnet"
