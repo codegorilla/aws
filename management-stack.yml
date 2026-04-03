@@ -1,0 +1,79 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Management Stack
+
+Resources:
+  ManagementVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.2.0/24
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: "management-vpc"
+
+  ManagementSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}a"
+      CidrBlock: 10.0.2.0/27
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref ManagementVPC
+      Tags:
+        - Key: Name
+          Value: "management-a-app-subnet"
+
+  ManagementSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}b"
+      CidrBlock: 10.0.2.32/27
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref ManagementVPC
+      Tags:
+        - Key: Name
+          Value: "management-b-app-subnet"
+
+  ManagementSubnet3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}a"
+      CidrBlock: 10.0.2.64/27
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref ManagementVPC
+      Tags:
+        - Key: Name
+          Value: "management-a-data-subnet"
+
+  ManagementSubnet4:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}b"
+      CidrBlock: 10.0.2.96/27
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref ManagementVPC
+      Tags:
+        - Key: Name
+          Value: "management-b-data-subnet"
+
+  ManagementSubnet5:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}a"
+      CidrBlock: 10.0.2.128/28
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref ManagementVPC
+      Tags:
+        - Key: Name
+          Value: "management-a-tgw-subnet"
+
+  ManagementSubnet6:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}b"
+      CidrBlock: 10.0.2.144/28
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref ManagementVPC
+      Tags:
+        - Key: Name
+          Value: "management-b-tgw-subnet"

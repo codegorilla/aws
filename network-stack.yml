@@ -2,7 +2,7 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: Network stack
 
 Resources:
-  NetworkVPC:
+  VPC:
     Type: AWS::EC2::VPC
     Properties:
       CidrBlock: 10.0.1.0/24
@@ -12,35 +12,129 @@ Resources:
         - Key: Name
           Value: "network-vpc"
 
-  NetworkSubnet1:
+  Subnet1:
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: !Sub "${AWS::Region}a"
-      CidrBlock: 10.0.1.0/26
+      CidrBlock: 10.0.1.0/27
       MapPublicIpOnLaunch: false
-      VpcId: !Ref NetworkVPC
+      VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "network-a-subnet"
+          Value: "network-a-public-subnet"
 
-  NetworkSubnet2:
+  Subnet2:
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: !Sub "${AWS::Region}b"
-      CidrBlock: 10.0.1.64/26
+      CidrBlock: 10.0.1.32/27
       MapPublicIpOnLaunch: false
-      VpcId: !Ref NetworkVPC
+      VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "network-b-subnet"
+          Value: "network-b-public-subnet"
 
-  NetworkSubnet3:
+  Subnet3:
     Type: AWS::EC2::Subnet
     Properties:
-      AvailabilityZone: !Sub "${AWS::Region}c"
-      CidrBlock: 10.0.1.128/26
+      AvailabilityZone: !Sub "${AWS::Region}a"
+      CidrBlock: 10.0.1.64/27
       MapPublicIpOnLaunch: false
-      VpcId: !Ref NetworkVPC
+      VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "network-c-subnet"
+          Value: "network-a-private-subnet"
+
+  Subnet4:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}b"
+      CidrBlock: 10.0.1.96/27
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "network-b-private-subnet"
+
+  Subnet5:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}a"
+      CidrBlock: 10.0.1.128/28
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "network-a-tgw-subnet"
+
+  Subnet6:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}b"
+      CidrBlock: 10.0.1.144/28
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "network-b-tgw-subnet"
+
+  # Create custom route table and explicitly associate subnets with it to
+  # override the default "main" route table.
+
+  RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "network-rtb"
+
+  SubnetAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref Subnet1
+      RouteTableId: !Ref RouteTable
+
+  SubnetAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref Subnet2
+      RouteTableId: !Ref RouteTable
+
+  SubnetAssociation3:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref Subnet3
+      RouteTableId: !Ref RouteTable
+
+  SubnetAssociation4:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref Subnet4
+      RouteTableId: !Ref RouteTable
+
+  SubnetAssociation5:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref Subnet5
+      RouteTableId: !Ref RouteTable
+
+  SubnetAssociation6:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref Subnet6
+      RouteTableId: !Ref RouteTable
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: "network-igw"
+
+  GatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
