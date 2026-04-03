@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Network stack
+Description: Network Stack
 
 Resources:
   VPC:
@@ -78,52 +78,60 @@ Resources:
         - Key: Name
           Value: "network-b-tgw-subnet"
 
-  # Create custom route table and explicitly associate subnets with it to
-  # override the default "main" route table.
+  # Create custom route tables and explicitly associate subnets to
+  # override the default route table.
 
-  RouteTable:
+  PublicRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "network-rtb"
+          Value: "network-public-rtb"
+
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "network-private-rtb"
 
   SubnetAssociation1:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       SubnetId: !Ref Subnet1
-      RouteTableId: !Ref RouteTable
+      RouteTableId: !Ref PublicRouteTable
 
   SubnetAssociation2:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       SubnetId: !Ref Subnet2
-      RouteTableId: !Ref RouteTable
+      RouteTableId: !Ref PublicRouteTable
 
   SubnetAssociation3:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       SubnetId: !Ref Subnet3
-      RouteTableId: !Ref RouteTable
+      RouteTableId: !Ref PrivateRouteTable
 
   SubnetAssociation4:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       SubnetId: !Ref Subnet4
-      RouteTableId: !Ref RouteTable
+      RouteTableId: !Ref PrivateRouteTable
 
   SubnetAssociation5:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       SubnetId: !Ref Subnet5
-      RouteTableId: !Ref RouteTable
+      RouteTableId: !Ref PrivateRouteTable
 
   SubnetAssociation6:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       SubnetId: !Ref Subnet6
-      RouteTableId: !Ref RouteTable
+      RouteTableId: !Ref PrivateRouteTable
 
   InternetGateway:
     Type: AWS::EC2::InternetGateway

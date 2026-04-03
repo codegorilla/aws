@@ -2,7 +2,7 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: Management Stack
 
 Resources:
-  ManagementVPC:
+  VPC:
     Type: AWS::EC2::VPC
     Properties:
       CidrBlock: 10.0.2.0/24
@@ -12,68 +12,145 @@ Resources:
         - Key: Name
           Value: "management-vpc"
 
-  ManagementSubnet1:
+  Subnet1:
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: !Sub "${AWS::Region}a"
       CidrBlock: 10.0.2.0/27
       MapPublicIpOnLaunch: false
-      VpcId: !Ref ManagementVPC
+      VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "management-a-app-subnet"
+          Value: "management-a-public-subnet"
 
-  ManagementSubnet2:
+  Subnet2:
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: !Sub "${AWS::Region}b"
       CidrBlock: 10.0.2.32/27
       MapPublicIpOnLaunch: false
-      VpcId: !Ref ManagementVPC
+      VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "management-b-app-subnet"
+          Value: "management-b-public-subnet"
 
-  ManagementSubnet3:
+  Subnet3:
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: !Sub "${AWS::Region}a"
       CidrBlock: 10.0.2.64/27
       MapPublicIpOnLaunch: false
-      VpcId: !Ref ManagementVPC
+      VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "management-a-data-subnet"
+          Value: "management-a-private-subnet"
 
-  ManagementSubnet4:
+  Subnet4:
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: !Sub "${AWS::Region}b"
       CidrBlock: 10.0.2.96/27
       MapPublicIpOnLaunch: false
-      VpcId: !Ref ManagementVPC
+      VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "management-b-data-subnet"
+          Value: "management-b-private-subnet"
 
-  ManagementSubnet5:
+  Subnet5:
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: !Sub "${AWS::Region}a"
       CidrBlock: 10.0.2.128/28
       MapPublicIpOnLaunch: false
-      VpcId: !Ref ManagementVPC
+      VpcId: !Ref VPC
       Tags:
         - Key: Name
           Value: "management-a-tgw-subnet"
 
-  ManagementSubnet6:
+  Subnet6:
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: !Sub "${AWS::Region}b"
       CidrBlock: 10.0.2.144/28
       MapPublicIpOnLaunch: false
-      VpcId: !Ref ManagementVPC
+      VpcId: !Ref VPC
       Tags:
         - Key: Name
           Value: "management-b-tgw-subnet"
+
+  # Create custom route tables and explicitly associate subnets to
+  # override the default route table.
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "management-public-rtb"
+
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "management-private-rtb"
+
+  SubnetAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref Subnet1
+      RouteTableId: !Ref PublicRouteTable
+
+  SubnetAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref Subnet2
+      RouteTableId: !Ref PublicRouteTable
+
+  SubnetAssociation3:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref Subnet3
+      RouteTableId: !Ref PrivateRouteTable
+
+  SubnetAssociation4:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref Subnet4
+      RouteTableId: !Ref PrivateRouteTable
+
+  SubnetAssociation5:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref Subnet5
+      RouteTableId: !Ref PrivateRouteTable
+
+  SubnetAssociation6:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref Subnet6
+      RouteTableId: !Ref PrivateRouteTable
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: "management-igw"
+
+  GatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: GatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+

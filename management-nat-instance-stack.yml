@@ -1,0 +1,28 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Management NAT Instance Stack
+
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+  PrivateSubnetCidr:
+    Type: String
+    Description: CIDR block of the private subnet (e.g., 10.0.1.0/24)
+
+Resources:
+  NatInstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow all traffic to NAT instance from private subnet
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: -1
+          CidrIp: !Ref PrivateSubnetCidr
+          Description: Allow all inbound traffic from private subnet
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+          Description: Allow all outbound traffic to anywhere
+      Tags:
+        - Key: Name
+          Value: "management-nat-instance-sg"
+
