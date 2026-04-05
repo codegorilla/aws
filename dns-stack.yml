@@ -1,0 +1,31 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: DNS stack
+
+Resources:
+
+  ForwardLookupZone:
+    Type: AWS::Route53::HostedZone
+    Properties:
+      Name: "saber.net"
+      HostedZoneConfig:
+        Comment: "Forward lookup zone"
+      VPCs:
+        - VPCId: !ImportValue ManagementStack-VpcId
+          VPCRegion: us-east-2
+      HostedZoneTags:
+        - Key: Name
+          Value: forward-lookup-zone
+
+  ReverseLookupZone:
+    Type: AWS::Route53::HostedZone
+    Properties:
+      Name: "0.10.in-addr.arpa"
+      HostedZoneConfig:
+        Comment: "Reverse lookup zone"
+      VPCs:
+        - VPCId: !ImportValue ManagementStack-VpcId
+          VPCRegion: us-east-2
+      HostedZoneTags:
+        - Key: Name
+          Value: reverse-lookup-zone
+
