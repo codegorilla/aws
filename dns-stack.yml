@@ -8,7 +8,7 @@ Resources:
     Properties:
       Name: "saber.net"
       HostedZoneConfig:
-        Comment: "Forward lookup zone"
+        Comment: "DNS forward lookup zone"
       VPCs:
         - VPCId: !ImportValue ManagementStack-VpcId
           VPCRegion: us-east-2
@@ -21,7 +21,7 @@ Resources:
     Properties:
       Name: "0.10.in-addr.arpa"
       HostedZoneConfig:
-        Comment: "Reverse lookup zone"
+        Comment: "DNS reverse lookup zone"
       VPCs:
         - VPCId: !ImportValue ManagementStack-VpcId
           VPCRegion: us-east-2
