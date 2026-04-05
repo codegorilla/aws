@@ -160,3 +160,14 @@ Outputs:
     Value: !Ref VPC
     Export:
       Name: !Sub "${AWS::StackName}-VpcId"
+  PublicSubnetAId:
+    Description: "The ID of the public subnet in AZ A"
+    Value: !Ref Subnet1
+    Export:
+      Name: !Sub "${AWS::StackName}-PublicSubnetAId"
+  PublicSubnetBId:
+    Description: "The ID of the public subnet in AZ B"
+    Value: !Ref Subnet2
+    Export:
+      Name: !Sub "${AWS::StackName}-PublicSubnetBId"
+
