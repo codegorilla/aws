@@ -10,7 +10,7 @@ Resources:
       HostedZoneConfig:
         Comment: "DNS forward lookup zone"
       VPCs:
-        - VPCId: !ImportValue ManagementStack-VpcId
+        - VPCId: !ImportValue management-stack-VpcId
           VPCRegion: us-east-2
       HostedZoneTags:
         - Key: Name
@@ -23,7 +23,7 @@ Resources:
       HostedZoneConfig:
         Comment: "DNS reverse lookup zone"
       VPCs:
-        - VPCId: !ImportValue ManagementStack-VpcId
+        - VPCId: !ImportValue management-stack-VpcId
           VPCRegion: us-east-2
       HostedZoneTags:
         - Key: Name

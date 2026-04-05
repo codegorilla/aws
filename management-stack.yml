@@ -156,7 +156,7 @@ Resources:
 
 Outputs:
   VpcId:
-    Description: VPC ID
+    Description: "The ID of the VPC"
     Value: !Ref VPC
     Export:
-      Name: ManagementStack-VpcId
+      Name: !Sub "${AWS::StackName}-VpcId"
