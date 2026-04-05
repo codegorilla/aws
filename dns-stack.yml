@@ -3,7 +3,7 @@ Description: DNS stack
 
 Resources:
 
-  ForwardLookupZone:
+  ForwardZone:
     Type: AWS::Route53::HostedZone
     Properties:
       Name: "saber.net"
@@ -14,9 +14,9 @@ Resources:
           VPCRegion: us-east-2
       HostedZoneTags:
         - Key: Name
-          Value: forward-lookup-zone
+          Value: forward-zone
 
-  ReverseLookupZone:
+  ReverseZone:
     Type: AWS::Route53::HostedZone
     Properties:
       Name: "0.10.in-addr.arpa"
@@ -27,5 +27,17 @@ Resources:
           VPCRegion: us-east-2
       HostedZoneTags:
         - Key: Name
-          Value: reverse-lookup-zone
+          Value: reverse-zone
+
+Outputs:
+  ForwardZoneId:
+    Description: "The ID of the Route 53 forward hosted zone"
+    Value: !Ref ForwardZone
+    Export:
+      Name: !Sub "${AWS::StackName}-ForwardZoneId"
+  ReverseZoneId:
+    Description: "The ID of the Route 53 reverse hosted zone"
+    Value: !Ref ReverseZone
+    Export:
+      Name: !Sub "${AWS::StackName}-ReverseZoneId"
 
