@@ -2,20 +2,17 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: Management NAT Instance Stack
 
 Parameters:
-  VpcId:
-    Type: AWS::EC2::VPC::Id
   PrivateSubnetCidr:
     Type: String
-    Description: CIDR block of the private subnet (e.g., 10.0.1.0/24)
-  SubnetId:
-    Type: AWS::EC2::Subnet::Id
+    Description: CIDR block of the private subnet
+    Default: 10.0.2.64/27
 
 Resources:
   NatInstanceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Allow all traffic to NAT instance from private subnet
-      VpcId: !Ref VpcId
+      VpcId: !ImportValue management-stack-VpcId
       SecurityGroupIngress:
         - IpProtocol: -1
           CidrIp: !Ref PrivateSubnetCidr
@@ -41,7 +38,7 @@ Resources:
         DeviceIndex: 0
         GroupSet: 
           - !Ref NatInstanceSecurityGroup
-        SubnetId: !Ref SubnetId
+        SubnetId: !ImportValue management-stack-PublicSubnetAId
       BlockDeviceMappings:
         - DeviceName: "/dev/xvda"
           Ebs:
