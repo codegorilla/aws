@@ -36,7 +36,7 @@ Resources:
       ImageId: ami-011d5239d6804e25e
       InstanceType: t3.micro
       KeyName: bear
-      NetworkInterfaces: 
+      NetworkInterfaces:
       - AssociatePublicIpAddress: true
         DeviceIndex: 0
         GroupSet: 
