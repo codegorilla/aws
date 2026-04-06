@@ -170,4 +170,14 @@ Outputs:
     Value: !Ref Subnet2
     Export:
       Name: !Sub "${AWS::StackName}-PublicSubnetBId"
+  PrivateSubnetAId:
+    Description: "The ID of the private subnet in AZ A"
+    Value: !Ref Subnet3
+    Export:
+      Name: !Sub "${AWS::StackName}-PrivateSubnetAId"
+  PrivateSubnetBId:
+    Description: "The ID of the private subnet in AZ B"
+    Value: !Ref Subnet4
+    Export:
+      Name: !Sub "${AWS::StackName}-PrivateSubnetBId"
 

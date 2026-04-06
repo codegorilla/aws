@@ -1,82 +1,112 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: Network stack
 
+Parameters:
+  VpcCidr:
+    Type: String
+    Description: "CIDR block of VPC"
+    Default: 10.0.1.0/24
+  PublicSubnet1Cidr:
+    Type: String
+    Description: "CIDR block of public subnet in AZ A"
+    Default: 10.0.1.0/27
+  PublicSubnet2Cidr:
+    Type: String
+    Description: "CIDR block of public subnet in AZ B"
+    Default: 10.0.1.32/27
+  PrivateSubnet1Cidr:
+    Type: String
+    Description: "CIDR block of private subnet in AZ A"
+    Default: 10.0.1.64/27
+  PrivateSubnet2Cidr:
+    Type: String
+    Description: "CIDR block of private subnet in AZ B"
+    Default: 10.0.1.96/27
+  TgwSubnet1Cidr:
+    Type: String
+    Description: "CIDR block of TGW subnet in AZ A"
+    Default: 10.0.1.128/28
+  TgwSubnet2Cidr:
+    Type: String
+    Description: "CIDR block of TGW subnet in AZ B"
+    Default: 10.0.1.144/28
+
 Resources:
   VPC:
     Type: AWS::EC2::VPC
     Properties:
-      CidrBlock: 10.0.1.0/24
+      CidrBlock: !Ref VpcCidr
       EnableDnsHostnames: true
       EnableDnsSupport: true
       Tags:
         - Key: Name
           Value: "network-vpc"
 
-  Subnet1:
+  PublicSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: !Sub "${AWS::Region}a"
-      CidrBlock: 10.0.1.0/27
+      CidrBlock: !Ref PublicSubnet1Cidr
       MapPublicIpOnLaunch: false
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "network-a-public-subnet"
+          Value: "network-public-subnet-a"
 
-  Subnet2:
+  PublicSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: !Sub "${AWS::Region}b"
-      CidrBlock: 10.0.1.32/27
+      CidrBlock: !Ref PublicSubnet2Cidr
       MapPublicIpOnLaunch: false
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "network-b-public-subnet"
+          Value: "network-public-subnet-b"
 
-  Subnet3:
+  PrivateSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: !Sub "${AWS::Region}a"
-      CidrBlock: 10.0.1.64/27
+      CidrBlock: !Ref PrivateSubnet1Cidr
       MapPublicIpOnLaunch: false
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "network-a-private-subnet"
+          Value: "network-private-subnet-a"
 
-  Subnet4:
+  PrivateSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: !Sub "${AWS::Region}b"
-      CidrBlock: 10.0.1.96/27
+      CidrBlock: !Ref PrivateSubnet2Cidr
       MapPublicIpOnLaunch: false
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "network-b-private-subnet"
+          Value: "network-private-subnet-b"
 
-  Subnet5:
+  TgwSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: !Sub "${AWS::Region}a"
-      CidrBlock: 10.0.1.128/28
+      CidrBlock: !Ref TgwSubnet1Cidr
       MapPublicIpOnLaunch: false
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "network-a-tgw-subnet"
+          Value: "network-tgw-subnet-a"
 
-  Subnet6:
+  TgwSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: !Sub "${AWS::Region}b"
-      CidrBlock: 10.0.1.144/28
+      CidrBlock: !Ref TgwSubnet2Cidr
       MapPublicIpOnLaunch: false
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "network-b-tgw-subnet"
+          Value: "network-tgw-subnet-b"
 
   # Create custom route tables and explicitly associate subnets to
   # override the default route table.
@@ -97,40 +127,40 @@ Resources:
         - Key: Name
           Value: "network-private-rtb"
 
-  SubnetAssociation1:
+  PublicSubnet1Association:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      SubnetId: !Ref Subnet1
+      SubnetId: !Ref PublicSubnet1
       RouteTableId: !Ref PublicRouteTable
 
-  SubnetAssociation2:
+  PublicSubnet2Association:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      SubnetId: !Ref Subnet2
+      SubnetId: !Ref PublicSubnet2
       RouteTableId: !Ref PublicRouteTable
 
-  SubnetAssociation3:
+  PrivateSubnet1Association:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      SubnetId: !Ref Subnet3
+      SubnetId: !Ref PrivateSubnet1
       RouteTableId: !Ref PrivateRouteTable
 
-  SubnetAssociation4:
+  PrivateSubnet2Association:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      SubnetId: !Ref Subnet4
+      SubnetId: !Ref PrivateSubnet2
       RouteTableId: !Ref PrivateRouteTable
 
-  SubnetAssociation5:
+  TgwSubnet1Association:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      SubnetId: !Ref Subnet5
+      SubnetId: !Ref TgwSubnet1
       RouteTableId: !Ref PrivateRouteTable
 
-  SubnetAssociation6:
+  TgwSubnet2Association:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      SubnetId: !Ref Subnet6
+      SubnetId: !Ref TgwSubnet2
       RouteTableId: !Ref PrivateRouteTable
 
   InternetGateway:
@@ -146,9 +176,48 @@ Resources:
       VpcId: !Ref VPC
       InternetGatewayId: !Ref InternetGateway
 
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: GatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
 Outputs:
   VpcId:
     Description: "The ID of the VPC"
     Value: !Ref VPC
     Export:
       Name: !Sub "${AWS::StackName}-VpcId"
+  PublicSubnet1Cidr:
+    Description: "CIDR block of public subnet in AZ A"
+    Value: !Ref PublicSubnet1Cidr
+    Export:
+      Name: !Sub "${AWS::StackName}-PublicSubnet1Cidr"
+  PublicSubnet2Cidr:
+    Description: "CIDR block of public subnet in AZ B"
+    Value: !Ref PublicSubnet2Cidr
+    Export:
+      Name: !Sub "${AWS::StackName}-PublicSubnet2Cidr"
+  PrivateSubnet1Cidr:
+    Description: "CIDR block of private subnet in AZ A"
+    Value: !Ref PrivateSubnet1Cidr
+    Export:
+      Name: !Sub "${AWS::StackName}-PrivateSubnet1Cidr"
+  PrivateSubnet2Cidr:
+    Description: "CIDR block of private subnet in AZ B"
+    Value: !Ref PrivateSubnet2Cidr
+    Export:
+      Name: !Sub "${AWS::StackName}-PrivateSubnet2Cidr"
+  TgwSubnet1Cidr:
+    Description: "CIDR block of TGW subnet in AZ A"
+    Value: !Ref TgwSubnet1Cidr
+    Export:
+      Name: !Sub "${AWS::StackName}-TgwSubnet1Cidr"
+  TgwSubnet2Cidr:
+    Description: "CIDR block of TGW subnet in AZ B"
+    Value: !Ref TgwSubnet2Cidr
+    Export:
+      Name: !Sub "${AWS::StackName}-TgwSubnet2Cidr"
+
