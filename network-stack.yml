@@ -127,6 +127,14 @@ Resources:
         - Key: Name
           Value: "network-private-rtb"
 
+  TgwRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "network-tgw-rtb"
+
   PublicSubnet1Association:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
@@ -155,13 +163,13 @@ Resources:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       SubnetId: !Ref TgwSubnet1
-      RouteTableId: !Ref PrivateRouteTable
+      RouteTableId: !Ref TgwRouteTable
 
   TgwSubnet2Association:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       SubnetId: !Ref TgwSubnet2
-      RouteTableId: !Ref PrivateRouteTable
+      RouteTableId: !Ref TgwRouteTable
 
   InternetGateway:
     Type: AWS::EC2::InternetGateway
