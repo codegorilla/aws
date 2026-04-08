@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Network (transit) stack
+Description: Inspection (firewall) stack
 
 Parameters:
   VpcCidr:
@@ -40,7 +40,7 @@ Resources:
       EnableDnsSupport: true
       Tags:
         - Key: Name
-          Value: "network-vpc"
+          Value: "inspection-vpc"
 
   PublicSubnet1:
     Type: AWS::EC2::Subnet
@@ -51,7 +51,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "network-public-subnet-a"
+          Value: "inspection-public-subnet-a"
 
   PublicSubnet2:
     Type: AWS::EC2::Subnet
@@ -62,7 +62,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "network-public-subnet-b"
+          Value: "inspection-public-subnet-b"
 
   PrivateSubnet1:
     Type: AWS::EC2::Subnet
@@ -73,7 +73,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "network-private-subnet-a"
+          Value: "inspection-private-subnet-a"
 
   PrivateSubnet2:
     Type: AWS::EC2::Subnet
@@ -84,7 +84,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "network-private-subnet-b"
+          Value: "inspection-private-subnet-b"
 
   TgwSubnet1:
     Type: AWS::EC2::Subnet
@@ -95,7 +95,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "network-tgw-subnet-a"
+          Value: "inspection-tgw-subnet-a"
 
   TgwSubnet2:
     Type: AWS::EC2::Subnet
@@ -106,7 +106,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "network-tgw-subnet-b"
+          Value: "inspection-tgw-subnet-b"
 
   # Create custom route tables and explicitly associate subnets to
   # override the default route table.
@@ -117,7 +117,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "network-public-rtb"
+          Value: "inspection-public-rtb"
 
   PrivateRouteTable:
     Type: AWS::EC2::RouteTable
@@ -125,7 +125,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "network-private-rtb"
+          Value: "inspection-private-rtb"
 
   TgwRouteTable:
     Type: AWS::EC2::RouteTable
@@ -133,7 +133,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "network-tgw-rtb"
+          Value: "inspection-tgw-rtb"
 
   PublicSubnet1Association:
     Type: AWS::EC2::SubnetRouteTableAssociation
@@ -176,7 +176,7 @@ Resources:
     Properties:
       Tags:
         - Key: Name
-          Value: "network-igw"
+          Value: "inspection-igw"
 
   GatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment

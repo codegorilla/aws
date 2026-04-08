@@ -40,7 +40,7 @@ Resources:
       EnableDnsSupport: true
       Tags:
         - Key: Name
-          Value: "management-vpc"
+          Value: "shared-services-vpc"
 
   PublicSubnet1:
     Type: AWS::EC2::Subnet
@@ -51,7 +51,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "management-public-subnet-a"
+          Value: "shared-services-public-subnet-a"
 
   PublicSubnet2:
     Type: AWS::EC2::Subnet
@@ -62,7 +62,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "management-public-subnet-b"
+          Value: "shared-services-public-subnet-b"
 
   PrivateSubnet1:
     Type: AWS::EC2::Subnet
@@ -73,7 +73,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "management-private-subnet-a"
+          Value: "shared-services-private-subnet-a"
 
   PrivateSubnet2:
     Type: AWS::EC2::Subnet
@@ -84,7 +84,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "management-private-subnet-b"
+          Value: "shared-services-private-subnet-b"
 
   TgwSubnet1:
     Type: AWS::EC2::Subnet
@@ -95,7 +95,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "management-tgw-subnet-a"
+          Value: "shared-services-tgw-subnet-a"
 
   TgwSubnet2:
     Type: AWS::EC2::Subnet
@@ -106,7 +106,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "management-tgw-subnet-b"
+          Value: "shared-services-tgw-subnet-b"
 
   # Create custom route tables and explicitly associate subnets to
   # override the default route table.
@@ -117,7 +117,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "management-public-rtb"
+          Value: "shared-services-public-rtb"
 
   PrivateRouteTable:
     Type: AWS::EC2::RouteTable
@@ -125,7 +125,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "management-private-rtb"
+          Value: "shared-services-private-rtb"
 
   TgwRouteTable:
     Type: AWS::EC2::RouteTable
@@ -133,7 +133,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "management-tgw-rtb"
+          Value: "shared-services-tgw-rtb"
 
   PublicSubnet1Association:
     Type: AWS::EC2::SubnetRouteTableAssociation
@@ -176,7 +176,7 @@ Resources:
     Properties:
       Tags:
         - Key: Name
-          Value: "management-igw"
+          Value: "shared-services-igw"
 
   GatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
