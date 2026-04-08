@@ -1,0 +1,13 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: VPC peering stack
+
+Resources:
+  VpcPeeringConnection:
+    Type: AWS::EC2::VPCPeeringConnection
+    Properties:
+      VpcId: !ImportValue network-stack-VpcId
+      PeerVpcId: !ImportValue management-stack-VpcId
+      Tags:
+      - Key: Name
+        Value: vpc-peering-network-management
+
