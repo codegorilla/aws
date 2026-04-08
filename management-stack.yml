@@ -198,26 +198,26 @@ Outputs:
     Value: !Ref VPC
     Export:
       Name: !Sub "${AWS::StackName}-VpcId"
-  PublicSubnetAId:
+  PublicSubnet1Id:
     Description: "The ID of the public subnet in AZ A"
-    Value: !Ref Subnet1
+    Value: !Ref PublicSubnet1
     Export:
-      Name: !Sub "${AWS::StackName}-PublicSubnetAId"
-  PublicSubnetBId:
+      Name: !Sub "${AWS::StackName}-PublicSubnet1Id"
+  PublicSubnet2Id:
     Description: "The ID of the public subnet in AZ B"
-    Value: !Ref Subnet2
+    Value: !Ref PublicSubnet2
     Export:
-      Name: !Sub "${AWS::StackName}-PublicSubnetBId"
-  PrivateSubnetAId:
+      Name: !Sub "${AWS::StackName}-PublicSubnet2Id"
+  PrivateSubnet1Id:
     Description: "The ID of the private subnet in AZ A"
-    Value: !Ref Subnet3
+    Value: !Ref PrivateSubnet1
     Export:
-      Name: !Sub "${AWS::StackName}-PrivateSubnetAId"
-  PrivateSubnetBId:
+      Name: !Sub "${AWS::StackName}-PrivateSubnet1Id"
+  PrivateSubnet2Id:
     Description: "The ID of the private subnet in AZ B"
-    Value: !Ref Subnet4
+    Value: !Ref PrivateSubnet2
     Export:
-      Name: !Sub "${AWS::StackName}-PrivateSubnetBId"
+      Name: !Sub "${AWS::StackName}-PrivateSubnet2Id"
   TgwSubnet1Cidr:
     Description: "CIDR block of TGW subnet in AZ A"
     Value: !Ref TgwSubnet1Cidr
