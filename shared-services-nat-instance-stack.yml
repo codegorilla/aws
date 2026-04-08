@@ -1,11 +1,11 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Management NAT Instance Stack
+Description: Shared services NAT instance stack
 
 Parameters:
   PrivateSubnetCidr:
     Type: String
     Description: CIDR block of the private subnet
-    Default: 10.0.1.64/27
+    Default: 10.0.2.64/27
 
 Resources:
   NatInstanceSecurityGroup:
