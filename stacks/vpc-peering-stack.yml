@@ -5,9 +5,9 @@ Resources:
   VpcPeeringConnection:
     Type: AWS::EC2::VPCPeeringConnection
     Properties:
-      VpcId: !ImportValue network-stack-VpcId
-      PeerVpcId: !ImportValue management-stack-VpcId
+      VpcId: !ImportValue inspection-stack-VpcId
+      PeerVpcId: !ImportValue shared-services-stack-VpcId
       Tags:
       - Key: Name
-        Value: vpc-peering-network-management
+        Value: inspection-and-shared-services-pcx
 

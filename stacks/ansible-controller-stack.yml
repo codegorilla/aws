@@ -1,0 +1,70 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Ansible controller stack
+
+# Assume SSM will be used for administrative access. Thus no need to
+# open tcp/22 for SSH.
+
+Resources:
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Ansible controller security group
+      VpcId: !ImportValue shared-services-stack-VpcId
+      SecurityGroupIngress: []
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+          Description: Allow all outbound traffic to anywhere
+      Tags:
+        - Key: Name
+          Value: "ansible-controller-sg"
+
+  # Ansible controller using Amazon Linux 2023 AMI
+
+  Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-011d5239d6804e25e
+      InstanceType: t3.micro
+      KeyName: bear
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeviceIndex: 0
+          GroupSet:
+            - !Ref SecurityGroup
+          SubnetId: !ImportValue shared-services-stack-PublicSubnet1Id
+      BlockDeviceMappings:
+        - DeviceName: "/dev/xvda"
+          Ebs:
+            VolumeType: gp3
+            DeleteOnTermination: true
+            VolumeSize: 10
+      IamInstanceProfile: ssm-quick-setup
+      Tags:
+        - Key: Name
+          Value: "ansible-controller-instance"
+
+  ForwardRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !ImportValue dns-stack-ForwardZoneId
+      Name: "titan.saber.net"
+      Type: A
+      TTL: 300
+      ResourceRecords:
+        - !GetAtt Instance.PrivateIp
+
+  ReverseRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !ImportValue dns-stack-ReverseZoneId
+      Name: !Sub
+        - "${octet3}.${octet2}.${octet1}.${octet0}.in-addr.arpa."
+        - octet0: !Select [0, !Split [".", !GetAtt Instance.PrivateIp]]
+          octet1: !Select [1, !Split [".", !GetAtt Instance.PrivateIp]]
+          octet2: !Select [2, !Split [".", !GetAtt Instance.PrivateIp]]
+          octet3: !Select [3, !Split [".", !GetAtt Instance.PrivateIp]]
+      Type: PTR
+      TTL: 300
+      ResourceRecords:
+        - "titan.saber.net"
