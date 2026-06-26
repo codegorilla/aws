@@ -1,0 +1,10 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: ECS stack
+
+Resources:
+
+  ECSServiceLinkedRole:
+    Type: 'AWS::IAM::ServiceLinkedRole'
+    Properties:
+      AWSServiceName: ecs.amazonaws.com
+      Description: 'ECS Service Linked Role'
