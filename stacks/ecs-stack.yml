@@ -4,7 +4,72 @@ Description: ECS stack
 Resources:
 
   ECSServiceLinkedRole:
-    Type: 'AWS::IAM::ServiceLinkedRole'
+    Type: AWS::IAM::ServiceLinkedRole
     Properties:
       AWSServiceName: ecs.amazonaws.com
-      Description: 'ECS Service Linked Role'
+      Description: ECS service-linked role
+
+  # Might rename this to vdms-cluster eventually
+
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    DependsOn: ECSServiceLinkedRole
+    Properties:
+      ClusterName: shared-services-ecs-cluster
+
+  # This task execution role is normally needed so that the ECS agent can
+  # perform its required actions such as pulling container images from ECR or
+  # sending logs to CloudWatch Logs. In some cases, additional permissions are
+  # required (e.g. to access Secrets Manager).
+
+  ECSTaskExecutionRole:
+    Type: AWS::IAM::Role
+    DependsOn: ECSServiceLinkedRole
+    Properties:
+      RoleName: ecs-task-execution-role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+
+  # Not sure if this actually has a hard dependency on the task execution role,
+  # but specified the dependency just in case.
+
+  # When using Fargate, the container and host ports must be the same.
+
+  ECSTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    DependsOn: ECSTaskExecutionRole
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      Cpu: 512
+      Memory: 2048
+      EnableFaultInjection: false
+      ExecutionRoleArn: "arn:aws:iam::164599051561:role/ecs-task-execution-role"
+      Family: web
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      RuntimePlatform:
+        CpuArchitecture: X86_64
+        OperatingSystemFamily: LINUX
+      ContainerDefinitions:
+        - Name: httpd
+          Image: "docker.io/library/httpd:2.4.68"
+          Cpu: 0
+          Essential: true
+          PortMappings:
+            - Name: httpd-80-tcp
+              AppProtocol: http
+              ContainerPort: 80
+              HostPort: 80
+              Protocol: tcp
+      Tags:
+        - Key: Name
+          Value: "httpd-ecs-task-definition"
