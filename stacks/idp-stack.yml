@@ -1,0 +1,59 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: IDP stack
+
+Resources:
+
+  # Configure network load balancer for IDP service
+
+  IDPTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      Name: "keycloak-target-group"
+      TargetType: ip
+      IpAddressType: ipv4
+      Port: 8080
+      Protocol: TCP
+      Targets: []
+      HealthCheckEnabled: true
+      HealthCheckPort: traffic-port
+      HealthCheckProtocol: TCP
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 10
+      HealthyThresholdCount: 5
+      UnhealthyThresholdCount: 2
+      VpcId: "vpc-00ef774dd5d89504b"
+
+  # When using Fargate, the container and host ports must be the same.
+
+  ECSTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      Cpu: 512
+      Memory: 2048
+      EnableFaultInjection: false
+      ExecutionRoleArn: "arn:aws:iam::164599051561:role/ecs-task-execution-role"
+      Family: web
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      RuntimePlatform:
+        CpuArchitecture: X86_64
+        OperatingSystemFamily: LINUX
+      ContainerDefinitions:
+        - Name: httpd
+          Image: "docker.io/library/httpd:2.4.68"
+          Cpu: 0
+          Essential: true
+          PortMappings:
+            - Name: httpd-80-tcp
+              AppProtocol: http
+              ContainerPort: 8080
+              HostPort: 8080
+              Protocol: tcp
+      Tags:
+        - Key: Name
+          Value: "httpd-ecs-task-definition"
