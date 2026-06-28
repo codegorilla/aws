@@ -48,7 +48,7 @@ Resources:
       Targets: []
       HealthCheckEnabled: true
       HealthCheckPort: traffic-port
-      HealthCheckProtocol: tcp
+      HealthCheckProtocol: TCP
       HealthyThresholdCount: 5
       UnhealthyThresholdCount: 2
       VpcId: !ImportValue shared-services-stack-VpcId
@@ -69,13 +69,11 @@ Resources:
 
   ECSTaskDefinition:
     Type: AWS::ECS::TaskDefinition
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
     Properties:
       Cpu: 512
       Memory: 2048
       EnableFaultInjection: false
-      ExecutionRoleArn: "arn:aws:iam::${XYZ-account-id}:role/ecs-task-execution-role"
+      ExecutionRoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/ecs-task-execution-role"
       Family: web
       NetworkMode: awsvpc
       RequiresCompatibilities:
