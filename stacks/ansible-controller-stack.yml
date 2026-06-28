@@ -68,3 +68,10 @@ Resources:
       TTL: 300
       ResourceRecords:
         - "titan.saber.net"
+
+Outputs:
+  GroupId:
+    Description: "The ID of the security group"
+    Value: !Ref SecurityGroup
+    Export:
+      Name: !Sub "${AWS::StackName}-SecurityGroupId"
