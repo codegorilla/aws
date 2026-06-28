@@ -1,6 +1,8 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: Shared services stack
 
+
+
 Parameters:
   VpcCidr:
     Type: String
@@ -14,22 +16,30 @@ Parameters:
     Type: String
     Description: "CIDR block of public subnet in AZ B"
     Default: 10.0.2.32/27
-  PrivateSubnet1Cidr:
+  AppSubnet1Cidr:
     Type: String
-    Description: "CIDR block of private subnet in AZ A"
+    Description: "CIDR block of app subnet in AZ A"
     Default: 10.0.2.64/27
-  PrivateSubnet2Cidr:
+  AppSubnet2Cidr:
     Type: String
-    Description: "CIDR block of private subnet in AZ B"
+    Description: "CIDR block of app subnet in AZ B"
     Default: 10.0.2.96/27
+  DataSubnet1Cidr:
+    Type: String
+    Description: "CIDR block of data subnet in AZ A"
+    Default: 10.0.2.128/27
+  DataSubnet2Cidr:
+    Type: String
+    Description: "CIDR block of data subnet in AZ B"
+    Default: 10.0.2.160/27
   TgwSubnet1Cidr:
     Type: String
     Description: "CIDR block of TGW subnet in AZ A"
-    Default: 10.0.2.128/28
+    Default: 10.0.2.224/28
   TgwSubnet2Cidr:
     Type: String
     Description: "CIDR block of TGW subnet in AZ B"
-    Default: 10.0.2.144/28
+    Default: 10.0.2.240/28
 
 Resources:
   VPC:
@@ -64,27 +74,49 @@ Resources:
         - Key: Name
           Value: "shared-services-public-subnet-b"
 
-  PrivateSubnet1:
+  AppSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: !Sub "${AWS::Region}a"
-      CidrBlock: !Ref PrivateSubnet1Cidr
+      CidrBlock: !Ref AppSubnet1Cidr
       MapPublicIpOnLaunch: false
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "shared-services-private-subnet-a"
+          Value: "shared-services-app-subnet-a"
 
-  PrivateSubnet2:
+  AppSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: !Sub "${AWS::Region}b"
-      CidrBlock: !Ref PrivateSubnet2Cidr
+      CidrBlock: !Ref AppSubnet2Cidr
       MapPublicIpOnLaunch: false
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "shared-services-private-subnet-b"
+          Value: "shared-services-app-subnet-b"
+
+  DataSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}a"
+      CidrBlock: !Ref DataSubnet1Cidr
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "shared-services-data-subnet-a"
+
+  DataSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}b"
+      CidrBlock: !Ref DataSubnet2Cidr
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "shared-services-data-subnet-b"
 
   TgwSubnet1:
     Type: AWS::EC2::Subnet
@@ -119,7 +151,21 @@ Resources:
         - Key: Name
           Value: "shared-services-public-rtb"
 
-  PrivateRouteTable:
+  # Even though the app subnet is private, it may have a NAT gateway that
+  # allows it to reach the internet.
+
+  AppRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "shared-services-private-rtb"
+
+  # The data subnet may not have a NAT gateway if only contains managed
+  # databases.
+
+  DataRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPC
@@ -147,17 +193,29 @@ Resources:
       SubnetId: !Ref PublicSubnet2
       RouteTableId: !Ref PublicRouteTable
 
-  PrivateSubnet1Association:
+  AppSubnet1Association:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      SubnetId: !Ref PrivateSubnet1
-      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref AppSubnet1
+      RouteTableId: !Ref AppRouteTable
 
-  PrivateSubnet2Association:
+  AppSubnet2Association:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      SubnetId: !Ref PrivateSubnet2
-      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref AppSubnet2
+      RouteTableId: !Ref AppRouteTable
+
+  DataSubnet1Association:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref DataSubnet1
+      RouteTableId: !Ref DataRouteTable
+
+  DataSubnet2Association:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref DataSubnet2
+      RouteTableId: !Ref DataRouteTable
 
   TgwSubnet1Association:
     Type: AWS::EC2::SubnetRouteTableAssociation
@@ -208,16 +266,26 @@ Outputs:
     Value: !Ref PublicSubnet2
     Export:
       Name: !Sub "${AWS::StackName}-PublicSubnet2Id"
-  PrivateSubnet1Id:
-    Description: "The ID of the private subnet in AZ A"
-    Value: !Ref PrivateSubnet1
+  AppSubnet1Id:
+    Description: "The ID of the app subnet in AZ A"
+    Value: !Ref AppSubnet1
     Export:
-      Name: !Sub "${AWS::StackName}-PrivateSubnet1Id"
-  PrivateSubnet2Id:
-    Description: "The ID of the private subnet in AZ B"
-    Value: !Ref PrivateSubnet2
+      Name: !Sub "${AWS::StackName}-AppSubnet1Id"
+  AppSubnet2Id:
+    Description: "The ID of the app subnet in AZ B"
+    Value: !Ref AppSubnet2
     Export:
-      Name: !Sub "${AWS::StackName}-PrivateSubnet2Id"
+      Name: !Sub "${AWS::StackName}-AppSubnet2Id"
+  DataSubnet1Id:
+    Description: "The ID of the data subnet in AZ A"
+    Value: !Ref DataSubnet1
+    Export:
+      Name: !Sub "${AWS::StackName}-DataSubnet1Id"
+  DataSubnet2Id:
+    Description: "The ID of the data subnet in AZ B"
+    Value: !Ref DataSubnet2
+    Export:
+      Name: !Sub "${AWS::StackName}-DataSubnet2Id"
   TgwSubnet1Cidr:
     Description: "CIDR block of TGW subnet in AZ A"
     Value: !Ref TgwSubnet1Cidr
