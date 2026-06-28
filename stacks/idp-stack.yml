@@ -110,6 +110,7 @@ Resources:
   # TODO: How to generalize the task definition revision?
 
   # Load balancer name was wrong.
+  # Could not pull container image - maybe need public access?
 
   ECSService:
     Type: AWS::ECS::Service
