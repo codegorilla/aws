@@ -3,14 +3,34 @@ Description: IDP stack
 
 Resources:
 
-  # Configure network load balancer for IDP service
+  # Configure load balancer for IDP service
 
-  IDPTargetGroup:
+  # Need to eventually open up from any client needing to communicate with IDP
+
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: IDP load balancer security group
+      VpcId: !ImportValue shared-services-stack-VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          SourceSecurityGroupId: !ImportValue ansible-controller-stack-SecurityGroupId
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+          Description: Allow all outbound traffic to anywhere
+      Tags:
+        - Key: Name
+          Value: "idp-load-balancer-sg"
+
+  TargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties:
-      Name: "keycloak-target-group"
+      Name: "keycloak-idp-target-group"
       TargetType: ip
       IpAddressType: ipv4
       Port: 8080
@@ -23,9 +43,41 @@ Resources:
       HealthCheckTimeoutSeconds: 10
       HealthyThresholdCount: 5
       UnhealthyThresholdCount: 2
-      VpcId: "vpc-00ef774dd5d89504b"
+      VpcId: !ImportValue shared-services-stack-VpcId
+
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      Name: "keycloak-idp-load-balancer"
+      IpAddressType: ipv4
+      Scheme: internal
+      Type: network
+      EnablePrefixForIpv6SourceNat: off
+      SecurityGroups:
+        - !Ref SecurityGroup
+      Subnets:
+        - !ImportValue shared-services-stack-IngressSubnet1Id
+        - !ImportValue shared-services-stack-IngressSubnet2Id
+
+  # TODO: Need to replace hard-coded values with variables
+
+  Listener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      Port: 80
+      Protocol: TCP
+      LoadBalancerArn: !Ref LoadBalancer
+      DefaultActions:
+        - TargetGroupArn: !Ref TargetGroup
+          Type: "forward"
 
   # When using Fargate, the container and host ports must be the same.
+
+  # TODO: I think we need a security group for the task or service as well.
 
   ECSTaskDefinition:
     Type: AWS::ECS::TaskDefinition
@@ -35,7 +87,7 @@ Resources:
       Cpu: 512
       Memory: 2048
       EnableFaultInjection: false
-      ExecutionRoleArn: "arn:aws:iam::164599051561:role/ecs-task-execution-role"
+      ExecutionRoleArn: "arn:aws:iam::${XYZ-account-id}:role/ecs-task-execution-role"
       Family: web
       NetworkMode: awsvpc
       RequiresCompatibilities:
