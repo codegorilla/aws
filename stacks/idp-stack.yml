@@ -95,3 +95,59 @@ Resources:
       Tags:
         - Key: Name
           Value: "httpd-ecs-task-definition"
+
+
+# Parameters:
+
+#   SecurityGroupIDs:
+#     Type: CommaDelimitedList
+#     Default: sg-0e73226281a817d97
+
+#   LoadBalancerName:
+#     Type: String
+#     Default: keycloak-idp-load-balancer
+
+  # TODO: How to generalize the task definition revision?
+
+  # Load balancer name was wrong.
+
+  ECSService:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: shared-services-ecs-cluster
+      TaskDefinition: !Sub "arn:aws:ecs:${AWS::Region}:${AWS::AccountId}:task-definition/web:6"
+      LaunchType: FARGATE
+      ServiceName: web-service-jrbig083
+      SchedulingStrategy: REPLICA
+      DesiredCount: 1
+      AvailabilityZoneRebalancing: ENABLED
+      LoadBalancers:
+        - ContainerName: httpd
+          ContainerPort: 8080
+          LoadBalancerName: !Ref LoadBalancer
+          TargetGroupArn: !Ref TargetGroup
+
+      # Need to make a new SG and reference it here
+
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups: !Ref SecurityGroupIDs
+          Subnets:
+            - !ImportValue shared-services-stack-AppSubnet1Id
+            - !ImportValue shared-services-stack-AppSubnet2Id
+      PlatformVersion: LATEST
+      DeploymentConfiguration:
+        DeploymentCircuitBreaker:
+          Enable: true
+          Rollback: true
+        Strategy: ROLLING
+        MaximumPercent: 200
+        MinimumHealthyPercent: 100
+      DeploymentController:
+        Type: ECS
+      ServiceConnectConfiguration:
+        Enabled: false
+      EnableECSManagedTags: true
+      EnableExecuteCommand: false
+      Tags: []
