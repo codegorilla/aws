@@ -1,20 +1,18 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: Shared services stack
 
-
-
 Parameters:
   VpcCidr:
     Type: String
     Description: "CIDR block of VPC"
     Default: 10.0.2.0/24
-  PublicSubnet1Cidr:
+  IngressSubnet1Cidr:
     Type: String
-    Description: "CIDR block of public subnet in AZ A"
+    Description: "CIDR block of ingress subnet in AZ A"
     Default: 10.0.2.0/27
-  PublicSubnet2Cidr:
+  IngressSubnet2Cidr:
     Type: String
-    Description: "CIDR block of public subnet in AZ B"
+    Description: "CIDR block of ingress subnet in AZ B"
     Default: 10.0.2.32/27
   AppSubnet1Cidr:
     Type: String
@@ -52,27 +50,27 @@ Resources:
         - Key: Name
           Value: "shared-services-vpc"
 
-  PublicSubnet1:
+  IngressSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: !Sub "${AWS::Region}a"
-      CidrBlock: !Ref PublicSubnet1Cidr
+      CidrBlock: !Ref IngressSubnet1Cidr
       MapPublicIpOnLaunch: false
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "shared-services-public-subnet-a"
+          Value: "shared-services-ingress-subnet-a"
 
-  PublicSubnet2:
+  IngressSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: !Sub "${AWS::Region}b"
-      CidrBlock: !Ref PublicSubnet2Cidr
+      CidrBlock: !Ref IngressSubnet2Cidr
       MapPublicIpOnLaunch: false
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "shared-services-public-subnet-b"
+          Value: "shared-services-ingress-subnet-b"
 
   AppSubnet1:
     Type: AWS::EC2::Subnet
@@ -143,13 +141,13 @@ Resources:
   # Create custom route tables and explicitly associate subnets to
   # override the default route table.
 
-  PublicRouteTable:
+  IngressRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "shared-services-public-rtb"
+          Value: "shared-services-ingress-rtb"
 
   # Even though the app subnet is private, it may have a NAT gateway that
   # allows it to reach the internet.
@@ -181,17 +179,17 @@ Resources:
         - Key: Name
           Value: "shared-services-tgw-rtb"
 
-  PublicSubnet1Association:
+  IngressSubnet1Association:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      SubnetId: !Ref PublicSubnet1
-      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref IngressSubnet1
+      RouteTableId: !Ref IngressRouteTable
 
-  PublicSubnet2Association:
+  IngressSubnet2Association:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      SubnetId: !Ref PublicSubnet2
-      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref IngressSubnet2
+      RouteTableId: !Ref IngressRouteTable
 
   AppSubnet1Association:
     Type: AWS::EC2::SubnetRouteTableAssociation
@@ -242,11 +240,11 @@ Resources:
       VpcId: !Ref VPC
       InternetGatewayId: !Ref InternetGateway
 
-  PublicRoute:
+  IngressRoute:
     Type: AWS::EC2::Route
     DependsOn: GatewayAttachment
     Properties:
-      RouteTableId: !Ref PublicRouteTable
+      RouteTableId: !Ref IngressRouteTable
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref InternetGateway
 
@@ -256,16 +254,16 @@ Outputs:
     Value: !Ref VPC
     Export:
       Name: !Sub "${AWS::StackName}-VpcId"
-  PublicSubnet1Id:
-    Description: "The ID of the public subnet in AZ A"
-    Value: !Ref PublicSubnet1
+  IngressSubnet1Id:
+    Description: "The ID of the ingress subnet in AZ A"
+    Value: !Ref IngressSubnet1
     Export:
-      Name: !Sub "${AWS::StackName}-PublicSubnet1Id"
-  PublicSubnet2Id:
-    Description: "The ID of the public subnet in AZ B"
-    Value: !Ref PublicSubnet2
+      Name: !Sub "${AWS::StackName}-IngressSubnet1Id"
+  IngressSubnet2Id:
+    Description: "The ID of the ingress subnet in AZ B"
+    Value: !Ref IngressSubnet2
     Export:
-      Name: !Sub "${AWS::StackName}-PublicSubnet2Id"
+      Name: !Sub "${AWS::StackName}-IngressSubnet2Id"
   AppSubnet1Id:
     Description: "The ID of the app subnet in AZ A"
     Value: !Ref AppSubnet1
