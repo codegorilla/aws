@@ -25,55 +25,43 @@ Resources:
         - Key: Name
           Value: "idp-load-balancer-sg"
 
-  TargetGroup:
-    Type: AWS::ElasticLoadBalancingV2::TargetGroup
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
-    Properties:
-      Name: "keycloak-idp-target-group"
-      TargetType: ip
-      IpAddressType: ipv4
-      Port: 8080
-      Protocol: TCP
-      Targets: []
-      HealthCheckEnabled: true
-      HealthCheckPort: traffic-port
-      HealthCheckProtocol: TCP
-      HealthCheckIntervalSeconds: 30
-      HealthCheckTimeoutSeconds: 10
-      HealthyThresholdCount: 5
-      UnhealthyThresholdCount: 2
-      VpcId: !ImportValue shared-services-stack-VpcId
-
   LoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
     Properties:
       Name: "keycloak-idp-load-balancer"
       IpAddressType: ipv4
       Scheme: internal
       Type: network
-      EnablePrefixForIpv6SourceNat: off
       SecurityGroups:
         - !Ref SecurityGroup
       Subnets:
         - !ImportValue shared-services-stack-IngressSubnet1Id
         - !ImportValue shared-services-stack-IngressSubnet2Id
 
-  # TODO: Need to replace hard-coded values with variables
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: "keycloak-idp-target-group"
+      TargetType: ip
+      Port: 8080
+      Protocol: TCP
+      Targets: []
+      HealthCheckEnabled: true
+      HealthCheckPort: traffic-port
+      HealthCheckProtocol: tcp
+      HealthyThresholdCount: 5
+      UnhealthyThresholdCount: 2
+      VpcId: !ImportValue shared-services-stack-VpcId
 
   Listener:
     Type: AWS::ElasticLoadBalancingV2::Listener
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
     Properties:
       Port: 80
       Protocol: TCP
       LoadBalancerArn: !Ref LoadBalancer
       DefaultActions:
         - TargetGroupArn: !Ref TargetGroup
-          Type: "forward"
+          Type: forward
 
   # When using Fargate, the container and host ports must be the same.
 
