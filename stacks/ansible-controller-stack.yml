@@ -32,7 +32,7 @@ Resources:
           DeviceIndex: 0
           GroupSet:
             - !Ref SecurityGroup
-          SubnetId: !ImportValue shared-services-stack-PublicSubnet1Id
+          SubnetId: !ImportValue shared-services-stack-IngressSubnet1Id
       BlockDeviceMappings:
         - DeviceName: "/dev/xvda"
           Ebs:
