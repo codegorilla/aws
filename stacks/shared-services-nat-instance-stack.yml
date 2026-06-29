@@ -2,32 +2,42 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: Shared services NAT instance stack
 
 Parameters:
-  PrivateSubnetCidr:
+  AppSubnet1Cidr:
     Type: String
-    Description: CIDR block of the private subnet
+    Description: CIDR block of app subnet in AZ A
     Default: 10.0.2.64/27
+  AppSubnet2Cidr:
+    Type: String
+    Description: CIDR block of app subnet in AZ B
+    Default: 10.0.2.96/27
 
 Resources:
   NatInstanceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Allow all traffic to NAT instance from private subnet
-      VpcId: !ImportValue management-stack-VpcId
+      GroupDescription: Allow all traffic to NAT instance from private subnets
+      VpcId: !ImportValue shared-services-stack-VpcId
       SecurityGroupIngress:
         - IpProtocol: -1
-          CidrIp: !Ref PrivateSubnetCidr
-          Description: Allow all inbound traffic from private subnet
+          CidrIp: !Ref AppSubnet1Cidr
+          Description: Allow all inbound traffic from app subnet in AZ A
+        - IpProtocol: -1
+          CidrIp: !Ref AppSubnet2Cidr
+          Description: Allow all inbound traffic from app subnet in AZ B
       SecurityGroupEgress:
         - IpProtocol: -1
           CidrIp: 0.0.0.0/0
           Description: Allow all outbound traffic to anywhere
       Tags:
         - Key: Name
-          Value: "management-nat-instance-sg"
+          Value: "shared-services-nat-instance-sg"
 
   # NAT instance using Amazon Linux 2023 AMI
 
-  NatInstance:
+  # When using VPC peering the TGW subnets are used as public subnets instead
+  # of housing TGWAs.
+
+  NatInstance1:
     Type: AWS::EC2::Instance
     Properties:
       ImageId: ami-011d5239d6804e25e
@@ -38,7 +48,7 @@ Resources:
         DeviceIndex: 0
         GroupSet: 
           - !Ref NatInstanceSecurityGroup
-        SubnetId: !ImportValue management-stack-PublicSubnetAId
+        SubnetId: !ImportValue shared-services-stack-TgwSubnet1Id
       BlockDeviceMappings:
         - DeviceName: "/dev/xvda"
           Ebs:
@@ -49,5 +59,29 @@ Resources:
       IamInstanceProfile: ssm-quick-setup
       Tags:
         - Key: Name
-          Value: "management-nat-instance"
+          Value: "shared-services-nat-instance-1"
+
+  NatInstance2:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-011d5239d6804e25e
+      InstanceType: t3.micro
+      KeyName: bear
+      NetworkInterfaces:
+      - AssociatePublicIpAddress: true
+        DeviceIndex: 0
+        GroupSet: 
+          - !Ref NatInstanceSecurityGroup
+        SubnetId: !ImportValue shared-services-stack-TgwSubnet2Id
+      BlockDeviceMappings:
+        - DeviceName: "/dev/xvda"
+          Ebs:
+            VolumeType: gp3
+            DeleteOnTermination: true
+            VolumeSize: 10
+      SourceDestCheck: false
+      IamInstanceProfile: ssm-quick-setup
+      Tags:
+        - Key: Name
+          Value: "shared-services-nat-instance-2"
 
