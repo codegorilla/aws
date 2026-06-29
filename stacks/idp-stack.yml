@@ -7,7 +7,7 @@ Resources:
 
   # Need to eventually open up from any client needing to communicate with IDP
 
-  SecurityGroup:
+  LoadBalancerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: IDP load balancer security group
@@ -17,6 +17,7 @@ Resources:
           FromPort: 80
           ToPort: 80
           SourceSecurityGroupId: !ImportValue ansible-controller-stack-SecurityGroupId
+          Description: Allow inbound HTTP
       SecurityGroupEgress:
         - IpProtocol: -1
           CidrIp: 0.0.0.0/0
@@ -33,7 +34,7 @@ Resources:
       Scheme: internal
       Type: network
       SecurityGroups:
-        - !Ref SecurityGroup
+        - !Ref LoadBalancerSecurityGroup
       Subnets:
         - !ImportValue shared-services-stack-IngressSubnet1Id
         - !ImportValue shared-services-stack-IngressSubnet2Id
@@ -43,7 +44,7 @@ Resources:
     Properties:
       Name: "keycloak-idp-target-group"
       TargetType: ip
-      Port: 8080
+      Port: 80
       Protocol: TCP
       Targets: []
       HealthCheckEnabled: true
@@ -63,9 +64,26 @@ Resources:
         - TargetGroupArn: !Ref TargetGroup
           Type: forward
 
-  # When using Fargate, the container and host ports must be the same.
+  ServiceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: IDP service security group
+      VpcId: !ImportValue shared-services-stack-VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
+          Description: Allow inbound HTTP
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+          Description: Allow all outbound traffic to anywhere
+      Tags:
+        - Key: Name
+          Value: "idp-service-sg"
 
-  # TODO: I think we need a security group for the task or service as well.
+  # When using Fargate, the container and host ports must be the same.
 
   ECSTaskDefinition:
     Type: AWS::ECS::TaskDefinition
@@ -89,66 +107,52 @@ Resources:
           PortMappings:
             - Name: httpd-80-tcp
               AppProtocol: http
-              ContainerPort: 8080
-              HostPort: 8080
+              ContainerPort: 80
+              HostPort: 80
               Protocol: tcp
       Tags:
         - Key: Name
           Value: "httpd-ecs-task-definition"
 
-
-# Parameters:
-
-#   SecurityGroupIDs:
-#     Type: CommaDelimitedList
-#     Default: sg-0e73226281a817d97
-
-#   LoadBalancerName:
-#     Type: String
-#     Default: keycloak-idp-load-balancer
-
   # TODO: How to generalize the task definition revision?
 
   # Load balancer name was wrong.
-  # Could not pull container image - maybe need public access?
 
-  ECSService:
-    Type: AWS::ECS::Service
-    Properties:
-      Cluster: shared-services-ecs-cluster
-      TaskDefinition: !Sub "arn:aws:ecs:${AWS::Region}:${AWS::AccountId}:task-definition/web:6"
-      LaunchType: FARGATE
-      ServiceName: web-service-jrbig083
-      SchedulingStrategy: REPLICA
-      DesiredCount: 1
-      AvailabilityZoneRebalancing: ENABLED
-      LoadBalancers:
-        - ContainerName: httpd
-          ContainerPort: 8080
-          LoadBalancerName: !Ref LoadBalancer
-          TargetGroupArn: !Ref TargetGroup
-
-      # Need to make a new SG and reference it here
-
-      NetworkConfiguration:
-        AwsvpcConfiguration:
-          AssignPublicIp: DISABLED
-          SecurityGroups: !Ref SecurityGroupIDs
-          Subnets:
-            - !ImportValue shared-services-stack-AppSubnet1Id
-            - !ImportValue shared-services-stack-AppSubnet2Id
-      PlatformVersion: LATEST
-      DeploymentConfiguration:
-        DeploymentCircuitBreaker:
-          Enable: true
-          Rollback: true
-        Strategy: ROLLING
-        MaximumPercent: 200
-        MinimumHealthyPercent: 100
-      DeploymentController:
-        Type: ECS
-      ServiceConnectConfiguration:
-        Enabled: false
-      EnableECSManagedTags: true
-      EnableExecuteCommand: false
-      Tags: []
+  # ECSService:
+  #   Type: AWS::ECS::Service
+  #   Properties:
+  #     Cluster: shared-services-ecs-cluster
+  #     TaskDefinition: !Sub "arn:aws:ecs:${AWS::Region}:${AWS::AccountId}:task-definition/web:9"
+  #     LaunchType: FARGATE
+  #     ServiceName: web-service
+  #     SchedulingStrategy: REPLICA
+  #     DesiredCount: 1
+  #     AvailabilityZoneRebalancing: ENABLED
+  #     LoadBalancers:
+  #       - ContainerName: httpd
+  #         ContainerPort: 80
+  #         LoadBalancerName: !Ref LoadBalancer
+  #         TargetGroupArn: !Ref TargetGroup
+  #     NetworkConfiguration:
+  #       AwsvpcConfiguration:
+  #         AssignPublicIp: DISABLED
+  #         SecurityGroups:
+  #           - !Ref ServiceSecurityGroup
+  #         Subnets:
+  #           - !ImportValue shared-services-stack-AppSubnet1Id
+  #           - !ImportValue shared-services-stack-AppSubnet2Id
+  #     PlatformVersion: LATEST
+  #     DeploymentConfiguration:
+  #       DeploymentCircuitBreaker:
+  #         Enable: true
+  #         Rollback: true
+  #       Strategy: ROLLING
+  #       MaximumPercent: 200
+  #       MinimumHealthyPercent: 100
+  #     DeploymentController:
+  #       Type: ECS
+  #     ServiceConnectConfiguration:
+  #       Enabled: false
+  #     EnableECSManagedTags: true
+  #     EnableExecuteCommand: false
+  #     Tags: []

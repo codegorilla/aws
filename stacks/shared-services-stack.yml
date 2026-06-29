@@ -149,19 +149,13 @@ Resources:
         - Key: Name
           Value: "shared-services-ingress-rtb"
 
-  # Even though the app subnet is private, it may have a NAT gateway that
-  # allows it to reach the internet.
-
   AppRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "shared-services-private-rtb"
-
-  # The data subnet may not have a NAT gateway if only contains managed
-  # databases.
+          Value: "shared-services-app-rtb"
 
   DataRouteTable:
     Type: AWS::EC2::RouteTable
@@ -169,7 +163,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "shared-services-private-rtb"
+          Value: "shared-services-data-rtb"
 
   TgwRouteTable:
     Type: AWS::EC2::RouteTable
@@ -240,11 +234,13 @@ Resources:
       VpcId: !Ref VPC
       InternetGatewayId: !Ref InternetGateway
 
-  IngressRoute:
+  # Actually this should be to TGW subnet
+
+  TgwRoute:
     Type: AWS::EC2::Route
     DependsOn: GatewayAttachment
     Properties:
-      RouteTableId: !Ref IngressRouteTable
+      RouteTableId: !Ref TgwRouteTable
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref InternetGateway
 

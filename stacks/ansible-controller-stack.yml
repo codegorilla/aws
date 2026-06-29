@@ -28,11 +28,11 @@ Resources:
       InstanceType: t3.micro
       KeyName: bear
       NetworkInterfaces:
-        - AssociatePublicIpAddress: true
+        - AssociatePublicIpAddress: false
           DeviceIndex: 0
           GroupSet:
             - !Ref SecurityGroup
-          SubnetId: !ImportValue shared-services-stack-IngressSubnet1Id
+          SubnetId: !ImportValue shared-services-stack-AppSubnet1Id
       BlockDeviceMappings:
         - DeviceName: "/dev/xvda"
           Ebs:
