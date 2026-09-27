@@ -300,28 +300,30 @@ Resources:
         - Key: Name
           Value: dev-management-eice
 
-  # InternetGateway:
-  #   Type: AWS::EC2::InternetGateway
-  #   Properties:
-  #     Tags:
-  #       - Key: Name
-  #         Value: "dev-igw"
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: "dev-igw"
 
-  # GatewayAttachment:
-  #   Type: AWS::EC2::VPCGatewayAttachment
-  #   Properties:
-  #     VpcId: !Ref VPC
-  #     InternetGatewayId: !Ref InternetGateway
+  GatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
 
-  # Actually this should be to TGW subnet
+  # Provides management subnet with route to internet. It would be
+  # more secure to use a NAT gateway, but that costs money, so we
+  # will stick with this for now.
 
-  # TgwRoute:
-  #   Type: AWS::EC2::Route
-  #   DependsOn: GatewayAttachment
-  #   Properties:
-  #     RouteTableId: !Ref TgwRouteTable
-  #     DestinationCidrBlock: 0.0.0.0/0
-  #     GatewayId: !Ref InternetGateway
+  ManagementRoute:
+    Type: AWS::EC2::Route
+    DependsOn: GatewayAttachment
+    Properties:
+      RouteTableId: !Ref ManagementRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
 
 Outputs:
   VpcId:
