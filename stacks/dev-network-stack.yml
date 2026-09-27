@@ -272,6 +272,34 @@ Resources:
       SubnetId: !Ref TgwSubnet3
       RouteTableId: !Ref TgwRouteTable
 
+  # We could lock this down further to only allow traffic to the
+  # EKS manager instance, but that rule would have to be added later
+  # on, after the EKS manager security group has been created.
+
+  ManagementInstanceConnectEndpointSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Management instance connect endpoint security group
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+          Description: Allow all outbound traffic to anywhere
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "dev-management-instance-connect-endpoint-sg"
+
+  ManagementInstanceConnectEndpoint:
+    Type: AWS::EC2::InstanceConnectEndpoint
+    Properties:
+      PreserveClientIp: false
+      SecurityGroupIds:
+        - !Ref ManagementInstanceConnectEndpointSecurityGroup
+      SubnetId: !Ref ManagementSubnet
+      Tags:
+        - Key: Name
+          Value: dev-management-eice
+
   # InternetGateway:
   #   Type: AWS::EC2::InternetGateway
   #   Properties:
@@ -351,3 +379,8 @@ Outputs:
     Value: !Ref TgwSubnet3Cidr
     Export:
       Name: !Sub "${AWS::StackName}-TgwSubnet3Cidr"
+  ManagementInstanceConnectEndpointSecurityGroupId:
+    Description: "ID of management instance connect endpoint security group"
+    Value: !Ref ManagementInstanceConnectEndpointSecurityGroup
+    Export:
+      Name: !Sub "${AWS::StackName}-ManagementInstanceConnectEndpointSecurityGroupId"
