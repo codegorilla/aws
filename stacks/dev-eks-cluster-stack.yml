@@ -55,6 +55,7 @@ Resources:
         AccessConfig:
           AuthenticationMode: API
           BootstrapClusterCreatorAdminPermissions: true
+        BootstrapSelfManagedAddons: false
         RoleArn: !GetAtt EKSClusterRole.Arn
         ResourcesVpcConfig:
           SecurityGroupIds:
@@ -68,3 +69,27 @@ Resources:
         Tags:
           - Key: "Creator"
             Value: "maxwell"
+
+  # To set up a basic EKS cluster, these add-ons are more-or-less
+  # required.
+
+  VPCCNIAddon:
+    Type: AWS::EKS::Addon
+    Properties:
+      AddonName: vpc-cni
+      ClusterName: !Ref EKSCluster
+      ResolveConflicts: OVERWRITE
+
+  CoreDNSAddon:
+    Type: AWS::EKS::Addon
+    Properties:
+      AddonName: coredns
+      ClusterName: !Ref EKSCluster
+      ResolveConflicts: OVERWRITE
+
+  KubeProxyAddon:
+    Type: AWS::EKS::Addon
+    Properties:
+      AddonName: kube-proxy
+      ClusterName: !Ref EKSCluster
+      ResolveConflicts: OVERWRITE
