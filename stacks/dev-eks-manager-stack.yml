@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: EKS manager (management server) stack
+Description: Development EKS Manager (management server) stack
 
 # Unlike SSM Session Manager, EC2 Instance Connect requires port
 # tcp/22 to be open on the instance's security group.
@@ -7,7 +7,7 @@ Description: EKS manager (management server) stack
 Parameters:
   AmiId:
     Type: AWS::EC2::Image::Id
-    Description: "ID of AMI to use for EKS manager instance"
+    Description: "ID of AMI to use for EKS Manager instance"
     Default: ami-011d5239d6804e25e
 
 Resources:
@@ -15,7 +15,7 @@ Resources:
   SecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: EKS manager security group
+      GroupDescription: Development EKS Manager security group
       VpcId: !ImportValue dev-network-stack-VpcId
       SecurityGroupIngress:
         - IpProtocol: tcp
@@ -28,7 +28,7 @@ Resources:
           Description: Allow all outbound traffic to anywhere
       Tags:
         - Key: Name
-          Value: "eks-manager-sg"
+          Value: "dev-eks-manager-sg"
 
   # I believe this role needs to allow it to be an EKS cluster
   # administrator. But I can't find that policy anywhere. I thought
@@ -60,14 +60,16 @@ Resources:
   # that has EKS Cluster Admin policy attached.
 
   # Note: SSM quick setup is probably not required since we are using
-  # EC2 instance connect instead.
+  # EC2 Instance Connect instead of SSM Session Manager.
+
+  # Note: Key pair is omitted because we are using EC2 Instance
+  # Connect instead of traditional SSH logins.
 
   Instance:
     Type: AWS::EC2::Instance
     Properties:
       ImageId: !Ref AmiId
       InstanceType: t3.micro
-      KeyName: svc.ansible
       NetworkInterfaces:
         - AssociatePublicIpAddress: false
           DeviceIndex: 0
@@ -83,13 +85,13 @@ Resources:
       IamInstanceProfile: ssm-quick-setup
       Tags:
         - Key: Name
-          Value: "eks-manager-instance"
+          Value: "dev-eks-manager-instance"
 
   # ForwardRecord:
   #   Type: AWS::Route53::RecordSet
   #   Properties:
   #     HostedZoneId: !ImportValue dns-stack-ForwardZoneId
-  #     Name: "eks-manager.saber.net"
+  #     Name: "eks-manager.dev.saber.net"
   #     Type: A
   #     TTL: 300
   #     ResourceRecords:
@@ -108,4 +110,4 @@ Resources:
   #     Type: PTR
   #     TTL: 300
   #     ResourceRecords:
-  #       - "eks-manager.saber.net"
+  #       - "eks-manager.dev.saber.net"

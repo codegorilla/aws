@@ -6,30 +6,36 @@ AWS stuff
 EKS Cluster Manager
 ===================
 
-Launch EKS cluster manager EC2 instance.
+Launch EKS cluster manager EC2 instance. Enable a public IP address.
 
-Set up EC2 instance connect. This requires an EC2 instance connect
-endpoint, but this should be free of charge.
+Installing kubectl
+------------------
 
-1. Download the latest stable release binary
-
-```bash
-$ sudo curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-```
-
-2. Grant executable permissions to the binary
+1. Determine the latest stable release version:
 
 ```bash
-$ sudo chmod +x ./kubectl
+$ curl https://dl.k8s.io/release/stable.txt
 ```
 
-3. Move the binary into your PATH
+2. Download the binary:
 
 ```bash
-$ sudo mv ./kubectl /usr/local/bin/kubectl
+$ sudo curl -O https://dl.k8s.io/release/v1.37.1/bin/linux/amd64/kubectl
 ```
 
-4. Verify the installation
+3. Grant executable permissions to the binary:
+
+```bash
+$ sudo chmod +x kubectl
+```
+
+4. Move the binary into your PATH
+
+```bash
+$ sudo mv kubectl /usr/local/bin/kubectl
+```
+
+5. Verify the installation
 
 ```bash
 $ kubectl version --client
