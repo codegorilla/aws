@@ -1,0 +1,353 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Development network stack
+
+Parameters:
+  VpcCidr:
+    Type: String
+    Description: "CIDR block of VPC"
+    Default: 10.1.0.0/16
+  ManagementSubnetCidr:
+    Type: String
+    Description: "CIDR block of management subnet"
+    Default: 10.1.0.0/24
+  IngressSubnet1Cidr:
+    Type: String
+    Description: "CIDR block of ingress subnet in AZ A"
+    Default: 10.1.10.0/24
+  IngressSubnet2Cidr:
+    Type: String
+    Description: "CIDR block of ingress subnet in AZ B"
+    Default: 10.1.11.0/24
+  IngressSubnet3Cidr:
+    Type: String
+    Description: "CIDR block of ingress subnet in AZ C"
+    Default: 10.1.12.0/24
+  NodeSubnet1Cidr:
+    Type: String
+    Description: "CIDR block of worker node subnet in AZ A"
+    Default: 10.1.20.0/24
+  NodeSubnet2Cidr:
+    Type: String
+    Description: "CIDR block of worker node subnet in AZ B"
+    Default: 10.1.21.0/24
+  NodeSubnet3Cidr:
+    Type: String
+    Description: "CIDR block of worker node subnet in AZ C"
+    Default: 10.1.22.0/24
+  TgwSubnet1Cidr:
+    Type: String
+    Description: "CIDR block of TGW subnet in AZ A"
+    Default: 10.1.30.0/24
+  TgwSubnet2Cidr:
+    Type: String
+    Description: "CIDR block of TGW subnet in AZ B"
+    Default: 10.1.31.0/24
+  TgwSubnet3Cidr:
+    Type: String
+    Description: "CIDR block of TGW subnet in AZ C"
+    Default: 10.1.32.0/24
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCidr
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: "dev-vpc"
+
+  # The management subnet is a special subnet used to hold an EC2
+  # instance that can be used to manage the EKS cluster. It may not
+  # be necessary if an EC2 instance can reach the API server from
+  # another VPC, but that would require VPC peering to be configured.
+
+  ManagementSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}a"
+      CidrBlock: !Ref ManagementSubnetCidr
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "dev-management-subnet"
+
+  IngressSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}a"
+      CidrBlock: !Ref IngressSubnet1Cidr
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "dev-ingress-subnet-a"
+
+  IngressSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}b"
+      CidrBlock: !Ref IngressSubnet2Cidr
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "dev-ingress-subnet-b"
+
+  IngressSubnet3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}c"
+      CidrBlock: !Ref IngressSubnet3Cidr
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "dev-ingress-subnet-c"
+
+  NodeSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}a"
+      CidrBlock: !Ref NodeSubnet1Cidr
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "dev-node-subnet-a"
+
+  NodeSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}b"
+      CidrBlock: !Ref NodeSubnet2Cidr
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "dev-node-subnet-b"
+
+  NodeSubnet3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}c"
+      CidrBlock: !Ref NodeSubnet3Cidr
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "dev-node-subnet-c"
+
+  # TGW subnets are only used if we are using a transit gateway. If
+  # VPC peering is being used exclusively, then we don't need the TGW
+  # subnets.
+
+  TgwSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}a"
+      CidrBlock: !Ref TgwSubnet1Cidr
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "dev-tgw-subnet-a"
+
+  TgwSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}b"
+      CidrBlock: !Ref TgwSubnet2Cidr
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "dev-tgw-subnet-b"
+
+  TgwSubnet3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}c"
+      CidrBlock: !Ref TgwSubnet3Cidr
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "dev-tgw-subnet-c"
+
+  # Create custom route tables and explicitly associate subnets to
+  # override the default route table.
+
+  ManagementRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "dev-management-rtb"
+
+  IngressRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "dev-ingress-rtb"
+
+  NodeRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "dev-node-rtb"
+
+  TgwRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "dev-tgw-rtb"
+
+  ManagementSubnetAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref ManagementSubnet
+      RouteTableId: !Ref ManagementRouteTable
+
+  IngressSubnet1Association:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref IngressSubnet1
+      RouteTableId: !Ref IngressRouteTable
+
+  IngressSubnet2Association:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref IngressSubnet2
+      RouteTableId: !Ref IngressRouteTable
+
+  IngressSubnet3Association:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref IngressSubnet3
+      RouteTableId: !Ref IngressRouteTable
+
+  NodeSubnet1Association:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref NodeSubnet1
+      RouteTableId: !Ref NodeRouteTable
+
+  NodeSubnet2Association:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref NodeSubnet2
+      RouteTableId: !Ref NodeRouteTable
+
+  NodeSubnet3Association:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref NodeSubnet3
+      RouteTableId: !Ref NodeRouteTable
+
+  TgwSubnet1Association:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref TgwSubnet1
+      RouteTableId: !Ref TgwRouteTable
+
+  TgwSubnet2Association:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref TgwSubnet2
+      RouteTableId: !Ref TgwRouteTable
+
+  TgwSubnet3Association:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref TgwSubnet3
+      RouteTableId: !Ref TgwRouteTable
+
+  # InternetGateway:
+  #   Type: AWS::EC2::InternetGateway
+  #   Properties:
+  #     Tags:
+  #       - Key: Name
+  #         Value: "dev-igw"
+
+  # GatewayAttachment:
+  #   Type: AWS::EC2::VPCGatewayAttachment
+  #   Properties:
+  #     VpcId: !Ref VPC
+  #     InternetGatewayId: !Ref InternetGateway
+
+  # Actually this should be to TGW subnet
+
+  # TgwRoute:
+  #   Type: AWS::EC2::Route
+  #   DependsOn: GatewayAttachment
+  #   Properties:
+  #     RouteTableId: !Ref TgwRouteTable
+  #     DestinationCidrBlock: 0.0.0.0/0
+  #     GatewayId: !Ref InternetGateway
+
+Outputs:
+  VpcId:
+    Description: "The ID of the VPC"
+    Value: !Ref VPC
+    Export:
+      Name: !Sub "${AWS::StackName}-VpcId"
+  ManagementSubnetId:
+    Description: "The ID of the management subnet"
+    Value: !Ref ManagementSubnet
+    Export:
+      Name: !Sub "${AWS::StackName}-ManagementSubnetId"
+  IngressSubnet1Id:
+    Description: "The ID of the ingress subnet in AZ A"
+    Value: !Ref IngressSubnet1
+    Export:
+      Name: !Sub "${AWS::StackName}-IngressSubnet1Id"
+  IngressSubnet2Id:
+    Description: "The ID of the ingress subnet in AZ B"
+    Value: !Ref IngressSubnet2
+    Export:
+      Name: !Sub "${AWS::StackName}-IngressSubnet2Id"
+  IngressSubnet3Id:
+    Description: "The ID of the ingress subnet in AZ C"
+    Value: !Ref IngressSubnet3
+    Export:
+      Name: !Sub "${AWS::StackName}-IngressSubnet3Id"
+  NodeSubnet1Id:
+    Description: "The ID of the node subnet in AZ A"
+    Value: !Ref NodeSubnet1
+    Export:
+      Name: !Sub "${AWS::StackName}-NodeSubnet1Id"
+  NodeSubnet2Id:
+    Description: "The ID of the node subnet in AZ B"
+    Value: !Ref NodeSubnet2
+    Export:
+      Name: !Sub "${AWS::StackName}-NodeSubnet2Id"
+  NodeSubnet3Id:
+    Description: "The ID of the node subnet in AZ C"
+    Value: !Ref NodeSubnet3
+    Export:
+      Name: !Sub "${AWS::StackName}-NodeSubnet3Id"
+  TgwSubnet1Cidr:
+    Description: "CIDR block of TGW subnet in AZ A"
+    Value: !Ref TgwSubnet1Cidr
+    Export:
+      Name: !Sub "${AWS::StackName}-TgwSubnet1Cidr"
+  TgwSubnet2Cidr:
+    Description: "CIDR block of TGW subnet in AZ B"
+    Value: !Ref TgwSubnet2Cidr
+    Export:
+      Name: !Sub "${AWS::StackName}-TgwSubnet2Cidr"
+  TgwSubnet3Cidr:
+    Description: "CIDR block of TGW subnet in AZ C"
+    Value: !Ref TgwSubnet3Cidr
+    Export:
+      Name: !Sub "${AWS::StackName}-TgwSubnet3Cidr"

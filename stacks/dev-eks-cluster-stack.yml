@@ -1,0 +1,70 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Development EKS cluster stack
+
+Resources:
+
+  EKSClusterRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "eks.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Description: EKS cluster role
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+      RoleName: eksClusterRole
+      Tags:
+        - Key: "Name"
+          Value: "eks_cluster_role"
+
+  # An additional security group beyond the one that is automatically
+  # created by AWS during EKS cluster creation. The purpose of this
+  # additional security group is to allow access from the EKS manager
+  # instance.
+
+  EKSClusterAccessSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: EKS cluster access security group
+      VpcId: !ImportValue dev-network-stack-VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          SourceSecurityGroupId: !ImportValue dev-eks-manager-SecurityGroupId
+          Description: Allow inbound HTTP
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+          Description: Allow all outbound traffic to anywhere
+      Tags:
+        - Key: Name
+          Value: "eks-cluster-access-sg"
+
+  EKSCluster:
+      Type: AWS::EKS::Cluster
+      Properties:
+        Name: Dev
+        Version: "1.36"
+        AccessConfig:
+          AuthenticationMode: API
+          BootstrapClusterCreatorAdminPermissions: true
+        RoleArn: !GetAtt EKSClusterRole.Arn
+        ResourcesVpcConfig:
+          SecurityGroupIds:
+            - !Ref EKSClusterAccessSecurityGroup
+          SubnetIds:
+            - !ImportValue dev-network-stack-NodeSubnet1Id
+            - !ImportValue dev-network-stack-NodeSubnet2Id
+            - !ImportValue dev-network-stack-NodeSubnet3Id
+          EndpointPrivateAccess: true
+          EndpointPublicAccess: false
+        Tags:
+          - Key: "Creator"
+            Value: "maxwell"
