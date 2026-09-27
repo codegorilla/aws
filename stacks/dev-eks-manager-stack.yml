@@ -111,3 +111,10 @@ Resources:
   #     TTL: 300
   #     ResourceRecords:
   #       - "eks-manager.dev.saber.net"
+
+Outputs:
+  SecurityGroupId:
+    Description: "ID of EKS Manager security group"
+    Value: !Ref SecurityGroup
+    Export:
+      Name: !Sub "${AWS::StackName}-SecurityGroupId"

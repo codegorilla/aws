@@ -18,10 +18,10 @@ Resources:
       Description: EKS cluster role
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
-      RoleName: eksClusterRole
+      RoleName: dev-eks-cluster-role
       Tags:
         - Key: "Name"
-          Value: "eks_cluster_role"
+          Value: "dev-eks-cluster-role"
 
   # An additional security group beyond the one that is automatically
   # created by AWS during EKS cluster creation. The purpose of this
@@ -37,7 +37,7 @@ Resources:
         - IpProtocol: tcp
           FromPort: 443
           ToPort: 443
-          SourceSecurityGroupId: !ImportValue dev-eks-manager-SecurityGroupId
+          SourceSecurityGroupId: !ImportValue dev-eks-manager-stack-SecurityGroupId
           Description: Allow inbound HTTP
       SecurityGroupEgress:
         - IpProtocol: -1
@@ -45,7 +45,7 @@ Resources:
           Description: Allow all outbound traffic to anywhere
       Tags:
         - Key: Name
-          Value: "eks-cluster-access-sg"
+          Value: "dev-eks-cluster-access-sg"
 
   EKSCluster:
       Type: AWS::EKS::Cluster
