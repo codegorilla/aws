@@ -52,6 +52,10 @@ Resources:
   # has a role attached that allows cluster administration. But for
   # now just leave it as true, which is the default setting.
 
+  # Note: We want to disable bootstrapping of self-managed add-ons
+  # and add them explicitly instead. This gives more control and
+  # insight over the core add-ons.
+
   EKSCluster:
       Type: AWS::EKS::Cluster
       Properties:
