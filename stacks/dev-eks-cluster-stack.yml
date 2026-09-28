@@ -103,6 +103,13 @@ Resources:
       ClusterName: !Ref EKSCluster
       ResolveConflicts: OVERWRITE
 
+  EKSPodIdentityAgentAddon:
+    Type: AWS::EKS::Addon
+    Properties:
+      AddonName: eks-pod-identity-agent
+      ClusterName: !Ref EKSCluster
+      ResolveConflicts: OVERWRITE
+
   # This access entry gives the EKS manager (management server)
   # cluster admin permissions.
 
@@ -116,3 +123,28 @@ Resources:
       ClusterName: Dev
       PrincipalArn: "arn:aws:iam::164599051561:role/dev-eks-manager-role"
       Type: STANDARD
+
+  # This role is created here in preparation for creating one or more
+  # node groups. We need to use kubectl to associate it with a
+  # service account before the node group(s) are created.
+
+  EKSVPCCNIRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: EKS VPC CNI role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "pods.eks.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+              - "sts:TagSession"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+      RoleName: dev-eks-vpc-cni-role
+      Tags:
+        - Key: "Name"
+          Value: "dev-eks-vpc-cni-role"

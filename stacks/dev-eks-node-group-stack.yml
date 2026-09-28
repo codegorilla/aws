@@ -24,6 +24,9 @@ Resources:
         - Key: "Name"
           Value: "dev-eks-node-role"
 
+  # Todo: Need another role for the VPC CNI plugin.
+
+
   # EKSNodegroup:
   #   Type: AWS::EKS::Nodegroup
   #   DependsOn: EKSCluster
