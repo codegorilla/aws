@@ -30,29 +30,54 @@ Resources:
         - Key: Name
           Value: "dev-eks-manager-sg"
 
-  # I believe this role needs to allow it to be an EKS cluster
-  # administrator. But I can't find that policy anywhere. I thought
-  # I saw it before, so will need to look for it again.
+  # The following IAM policy and role are needed to allow the
+  # "aws eks update-kubeconfig ..." command to complete successfully.
 
-  # EKSManagerRole:
-  #   Type: AWS::IAM::Role
-  #   Properties:
-  #     AssumeRolePolicyDocument:
-  #       Version: "2012-10-17"
-  #       Statement:
-  #         - Effect: "Allow"
-  #           Principal:
-  #             Service:
-  #               - "eks.amazonaws.com"
-  #           Action:
-  #             - "sts:AssumeRole"
-  #     Description: EKS manager role
-  #     ManagedPolicyArns:
-  #       - "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
-  #     RoleName: eksClusterRole
-  #     Tags:
-  #       - Key: "Name"
-  #         Value: "eks_cluster_role"
+  ManagedPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: "Allows describing any EKS cluster within this AWS account"
+      ManagedPolicyName: dev-eks-manager-policy
+      Path: '/'
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - "eks:DescribeCluster"
+            Resource: !Sub "arn:aws:eks:*:${AWS::AccountId}:cluster/*"
+
+  Role:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: "Development EKS manager role"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "ec2.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - !Ref ManagedPolicy
+      RoleName: dev-eks-manager-role
+      Tags:
+        - Key: "Name"
+          Value: "dev-eks-manager-role"
+
+  # Our understanding is that since we are creating the role in the
+  # same CFn template where the instance is defined, we need to
+  # explicity create the IAM profile. Perhaps this requirement can be
+  # verified in the future.
+
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: "/"
+      Roles:
+        - !Ref Role
 
   # We should use Amazon Linux 2023 AMI. Do not associate a public IP
   # in CFn. Instead, do it manually whenever required to avoid costs
@@ -82,7 +107,7 @@ Resources:
             VolumeType: gp3
             DeleteOnTermination: true
             VolumeSize: 10
-      IamInstanceProfile: ssm-quick-setup
+      IamInstanceProfile: !Ref InstanceProfile
       Tags:
         - Key: Name
           Value: "dev-eks-manager-instance"

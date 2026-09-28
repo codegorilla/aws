@@ -41,11 +41,16 @@ $ sudo mv kubectl /usr/local/bin/kubectl
 $ kubectl version --client
 ```
 
-Configure access
+Configuring Access
+------------------
 
-Make sure to build the cluster with access method set to API
-Assign a role to the management instance and then configure EKS access to allow that role
-to admin the EKS cluster.
+Run the following command to configure the kubeconfig file:
+
+```bash
+$ aws eks update-kubeconfig --region us-east-2 --name Dev
+```
+
+
 
 How to handle security group access:
 

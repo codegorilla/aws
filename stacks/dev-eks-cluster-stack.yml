@@ -93,3 +93,17 @@ Resources:
       AddonName: kube-proxy
       ClusterName: !Ref EKSCluster
       ResolveConflicts: OVERWRITE
+
+  # This access entry gives the EKS manager (management server)
+  # cluster admin permissions.
+
+  AccessEntry:
+    Type: AWS::EKS::AccessEntry
+    Properties:
+      AccessPolicies:
+        - PolicyArn: "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+          AccessScope:
+            Type: cluster
+      ClusterName: Dev
+      PrincipalArn: "arn:aws:iam::164599051561:role/dev-eks-manager-role"
+      Type: STANDARD
