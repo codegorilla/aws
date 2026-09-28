@@ -1,0 +1,37 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Development EKS node group stack
+
+Resources:
+
+  EKSNodeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "ec2.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Description: EKS node role
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+        - "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPullOnly"
+      RoleName: dev-eks-node-role
+      Tags:
+        - Key: "Name"
+          Value: "dev-eks-node-role"
+
+  # EKSNodegroup:
+  #   Type: AWS::EKS::Nodegroup
+  #   DependsOn: EKSCluster
+  #   Properties:
+  #     ClusterName: Dev
+  #     NodeRole: 'arn:aws:iam::012345678910:role/eksInstanceRole'
+  #     ScalingConfig:
+  #       MinSize: 0
+  #       DesiredSize: 2
+  #       MaxSize: 2
+  #     Subnets: []
