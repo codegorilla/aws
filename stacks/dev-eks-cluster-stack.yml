@@ -47,6 +47,11 @@ Resources:
         - Key: Name
           Value: "dev-eks-cluster-access-sg"
 
+  # I believe we can disable bootstrapping the cluster creator admin
+  # permissions because we plan to use an EKS management server that
+  # has a role attached that allows cluster administration. But for
+  # now just leave it as true, which is the default setting.
+
   EKSCluster:
       Type: AWS::EKS::Cluster
       Properties:
