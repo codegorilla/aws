@@ -121,7 +121,7 @@ Resources:
           AccessScope:
             Type: cluster
       ClusterName: Dev
-      PrincipalArn: "arn:aws:iam::164599051561:role/dev-eks-manager-role"
+      PrincipalArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/dev-eks-manager-role"
       Type: STANDARD
 
   # This role is created here in preparation for creating one or more
@@ -148,3 +148,11 @@ Resources:
       Tags:
         - Key: "Name"
           Value: "dev-eks-vpc-cni-role"
+
+  EKSVPCCNIPodIdentityAssociation:
+    Type: AWS::EKS::PodIdentityAssociation
+    Properties:
+      ClusterName: Dev
+      Namespace: kube-system
+      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/dev-eks-vpc-cni-role"
+      ServiceAccount: aws-node

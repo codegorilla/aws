@@ -3,6 +3,8 @@ Description: Development EKS node group stack
 
 Resources:
 
+  # Does this require an IAM profile?
+
   EKSNodeRole:
     Type: AWS::IAM::Role
     Properties:
@@ -24,17 +26,32 @@ Resources:
         - Key: "Name"
           Value: "dev-eks-node-role"
 
-  # Todo: Need another role for the VPC CNI plugin.
+  # Not sure if this is needed or not. Added for troubleshooting
+  # problem with node group not getting past creating status.
 
+  EKSNodeInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: "/"
+      Roles:
+        - !Ref EKSNodeRole
 
-  # EKSNodegroup:
-  #   Type: AWS::EKS::Nodegroup
-  #   DependsOn: EKSCluster
-  #   Properties:
-  #     ClusterName: Dev
-  #     NodeRole: 'arn:aws:iam::012345678910:role/eksInstanceRole'
-  #     ScalingConfig:
-  #       MinSize: 0
-  #       DesiredSize: 2
-  #       MaxSize: 2
-  #     Subnets: []
+  # Need NAT gateways for this to work.
+
+  EKSNodegroup:
+    Type: AWS::EKS::Nodegroup
+    Properties:
+      AmiType: AL2023_x86_64_STANDARD
+      ClusterName: Dev
+      InstanceTypes:
+        - t3.medium
+      NodegroupName: basic
+      NodeRole: !Sub "arn:aws:iam::${AWS::AccountId}:role/dev-eks-node-role"
+      ScalingConfig:
+        MinSize: 0
+        DesiredSize: 2
+        MaxSize: 2
+      Subnets:
+        - !ImportValue dev-network-stack-NodeSubnet1Id
+        - !ImportValue dev-network-stack-NodeSubnet2Id
+        - !ImportValue dev-network-stack-NodeSubnet3Id
