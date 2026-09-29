@@ -38,7 +38,8 @@ Resources:
       Roles:
         - !Ref EKSNodeRole
 
-  # Need NAT gateways for this to work.
+  # Need NAT gateways, connection to internet, or proper VPC
+  # endpoints for this to work.
 
   EKSNodegroup:
     Type: AWS::EKS::Nodegroup
@@ -51,9 +52,12 @@ Resources:
       NodeRole: !Sub "arn:aws:iam::${AWS::AccountId}:role/dev-eks-node-role"
       ScalingConfig:
         MinSize: 0
-        DesiredSize: 2
+        DesiredSize: 0
         MaxSize: 2
       Subnets:
         - !ImportValue dev-network-stack-NodeSubnet1Id
         - !ImportValue dev-network-stack-NodeSubnet2Id
         - !ImportValue dev-network-stack-NodeSubnet3Id
+      UpdateConfig:
+        MaxUnavailablePercentage: 100
+        UpdateStrategy: DEFAULT

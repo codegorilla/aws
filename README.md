@@ -41,9 +41,6 @@ $ sudo mv kubectl /usr/local/bin/kubectl
 $ kubectl version --client
 ```
 
-Configuring Access
-------------------
-
 Run the following command to configure the kubeconfig file:
 
 ```bash
