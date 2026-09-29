@@ -25,6 +25,8 @@ Resources:
       Tags:
         - Key: "Name"
           Value: "dev-eks-node-role"
+        - Key: "Force"
+          Value: 0
 
   # Not sure if this is needed or not. Added for troubleshooting
   # problem with node group not getting past creating status.
