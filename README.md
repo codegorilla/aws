@@ -54,29 +54,17 @@ $ aws eks update-kubeconfig --region us-east-2 --name Dev
 EKS Cluster
 ===========
 
-NOTE: This is NOT required when using EKS pod identities.
+Not sure if this is required on subnets. I added it manually to try
+to fix a problem, but the problem was actually caused by something else.
 
-Associate EKS VPC CNI role with `aws_node` kubernetes service account:
-
-```bash
-$ kubectl annotate serviceaccount \
-  -n kube-system aws-node \
-  eks.amazonaws.com/role-arn=arn:aws:iam::164599051561:role/dev-eks-vpc-cni-role
+```
+kubernetes.io/cluster/Dev = shared
 ```
 
-
-
-How to handle security group access:
-
-Option 1: The "Additional Security Groups" Method (Most Common)When you define an EKS cluster, AWS allows you to pass an array of your own pre-created security groups under the resourcesVpcConfig.securityGroupIds parameter.Create an EKS-Access Security Group: Before building the cluster, create a security group specifically for EKS control plane access (e.g., sg-eks-control-plane).Authorize the Management Instance: Add an inbound rule to sg-eks-control-plane allowing port 443 from your Management EC2 instance's security group.Pass it to EKS during creation: When launching the cluster, attach sg-eks-control-plane to the EKS cluster configuration. AWS will attach this group in addition to the one it creates automatically.
-
-
-Node group status is "creating", but seems to be taking too long. Root cause unknown.
-
-kubernetes.io/cluster/Dev = shared?
-
 Pod manifest:
-  
+
+```yaml
+---
 apiVersion: v1
 kind: Pod
 metadata:
@@ -89,4 +77,25 @@ spec:
       image: httpd:latest
       ports:
         - containerPort: 80
+```
 
+Service manifest:
+
+```yaml
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-internal: "true"
+  name: httpd-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: httpd
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+```

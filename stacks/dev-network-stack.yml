@@ -74,6 +74,9 @@ Resources:
         - Key: Name
           Value: "dev-management-subnet"
 
+  # The "kubernetes.io" tags allow EKS to perform automatic subnet
+  # discovery when using kubernetes services of type LoadBalancer.
+
   IngressSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
@@ -84,6 +87,10 @@ Resources:
       Tags:
         - Key: Name
           Value: "dev-ingress-subnet-a"
+        - Key: kubernetes.io/cluster/Dev
+          Value: owned
+        - Key: kubernetes.io/role/internal-elb
+          Value: 1
 
   IngressSubnet2:
     Type: AWS::EC2::Subnet
@@ -95,6 +102,10 @@ Resources:
       Tags:
         - Key: Name
           Value: "dev-ingress-subnet-b"
+        - Key: kubernetes.io/cluster/Dev
+          Value: owned
+        - Key: kubernetes.io/role/internal-elb
+          Value: 1
 
   IngressSubnet3:
     Type: AWS::EC2::Subnet
@@ -106,6 +117,10 @@ Resources:
       Tags:
         - Key: Name
           Value: "dev-ingress-subnet-c"
+        - Key: kubernetes.io/cluster/Dev
+          Value: owned
+        - Key: kubernetes.io/role/internal-elb
+          Value: 1
 
   # Unless we use a NAT gateway, we need to enable public IPs for the
   # node subnets.
