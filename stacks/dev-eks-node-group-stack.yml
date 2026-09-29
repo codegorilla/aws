@@ -3,8 +3,6 @@ Description: Development EKS node group stack
 
 Resources:
 
-  # Does this require an IAM profile?
-
   EKSNodeRole:
     Type: AWS::IAM::Role
     Properties:
@@ -28,8 +26,8 @@ Resources:
         - Key: "Force"
           Value: 0
 
-  # Not sure if this is needed or not. Added for troubleshooting
-  # problem with node group not getting past creating status.
+  # Not sure if this is needed or not. A profile is definitely
+  # needed, but it might be created automatically.
 
   EKSNodeInstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -47,7 +45,7 @@ Resources:
       AmiType: AL2023_x86_64_STANDARD
       ClusterName: Dev
       InstanceTypes:
-        - t3.medium
+        - t3.small
       NodegroupName: basic
       NodeRole: !Sub "arn:aws:iam::${AWS::AccountId}:role/dev-eks-node-role"
       ScalingConfig:
