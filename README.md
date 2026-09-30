@@ -97,6 +97,29 @@ spec:
       targetPort: 80
 ```
 
+Test:
+
+```yaml
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "internal"
+    service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
+  name: httpd-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: httpd
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+```
+
+
+
 Installing Helm
 ---------------
 
@@ -145,3 +168,17 @@ aws iam attach-role-policy \
         }
     ]
 }
+
+
+curl -Lo v2_14_1_full.yaml https://github.com/kubernetes-sigs/aws-load-balancer-controller/releases/download/v2.14.1/v2_14_1_full.yaml
+
+Definitely need cert-manager for AWS Load Balancer Controller to work.
+
+Note: aws-load-balancer-controller was in a crash loop.
+Problably due to the following settings in the deployment:
+
+args:
+  - --cluster-name=<your-cluster-name>
+  - --aws-region=<your-region>
+  - --aws-vpc-id=<your-vpc-id>
+

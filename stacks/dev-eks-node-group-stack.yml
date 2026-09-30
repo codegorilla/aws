@@ -50,7 +50,7 @@ Resources:
       NodeRole: !Sub "arn:aws:iam::${AWS::AccountId}:role/dev-eks-node-role"
       ScalingConfig:
         MinSize: 0
-        DesiredSize: 0
+        DesiredSize: 2
         MaxSize: 2
       Subnets:
         - !ImportValue dev-network-stack-NodeSubnet1Id
