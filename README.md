@@ -96,3 +96,52 @@ spec:
       port: 80
       targetPort: 80
 ```
+
+Installing Helm
+---------------
+
+```bash
+$ curl -O https://get.helm.sh/helm-v4.3.0-linux-amd64.tar.gz
+```
+
+```bash
+$ tar -xzvf helm-v4.3.0-linux-amd64.tar.gz
+```
+
+```bash
+$ sudo cp linux-amd64/helm /usr/local/bin
+```
+
+AWS Load Balancer Controller
+
+aws iam create-role \
+  --role-name AmazonEKSLoadBalancerControllerRole \
+  --assume-role-policy-document file://"pod-identity-trust-policy.json"
+
+aws iam attach-role-policy \
+  --policy-arn arn:aws:iam::111122223333:policy/AWSLoadBalancerControllerIAMPolicy \
+  --role-name AmazonEKSLoadBalancerControllerRole
+
+aws iam create-role \
+  --role-name AmazonEKSLoadBalancerControllerRole \
+  --assume-role-policy-document file://"pod-identity-trust-policy.json"
+
+aws iam attach-role-policy \
+  --policy-arn arn:aws:iam::111122223333:policy/AWSLoadBalancerControllerIAMPolicy \
+  --role-name AmazonEKSLoadBalancerControllerRole
+
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "amazonaws.com"
+            },
+            "Action": [
+                "sts:AssumeRole",
+                "sts:TagSession"
+            ]
+        }
+    ]
+}

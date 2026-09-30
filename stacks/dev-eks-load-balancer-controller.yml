@@ -1,0 +1,12 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Development AWS Load Balancer Controller pod identities association stack
+
+Resources:
+
+  PodIdentityAssociation:
+    Type: AWS::EKS::PodIdentityAssociation
+    Properties:
+      ClusterName: Dev
+      Namespace: kube-system
+      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/my-aws-load-balancer-controller-role"
+      ServiceAccount: aws-load-balancer-controller
