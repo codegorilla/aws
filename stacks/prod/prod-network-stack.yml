@@ -1,0 +1,398 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Production network stack
+
+Parameters:
+  VpcCidr:
+    Type: String
+    Description: "CIDR block of VPC"
+    Default: 10.2.0.0/16
+  ManagementSubnetCidr:
+    Type: String
+    Description: "CIDR block of management subnet"
+    Default: 10.2.0.0/24
+  LbSubnet1Cidr:
+    Type: String
+    Description: "CIDR block of LB subnet in AZ A"
+    Default: 10.2.10.0/24
+  LbSubnet2Cidr:
+    Type: String
+    Description: "CIDR block of LB subnet in AZ B"
+    Default: 10.2.11.0/24
+  LbSubnet3Cidr:
+    Type: String
+    Description: "CIDR block of LB subnet in AZ C"
+    Default: 10.2.12.0/24
+  NodeSubnet1Cidr:
+    Type: String
+    Description: "CIDR block of node subnet in AZ A"
+    Default: 10.2.20.0/24
+  NodeSubnet2Cidr:
+    Type: String
+    Description: "CIDR block of node subnet in AZ B"
+    Default: 10.2.21.0/24
+  NodeSubnet3Cidr:
+    Type: String
+    Description: "CIDR block of node subnet in AZ C"
+    Default: 10.2.22.0/24
+  TgwSubnet1Cidr:
+    Type: String
+    Description: "CIDR block of TGW subnet in AZ A"
+    Default: 10.2.30.0/24
+  TgwSubnet2Cidr:
+    Type: String
+    Description: "CIDR block of TGW subnet in AZ B"
+    Default: 10.2.31.0/24
+  TgwSubnet3Cidr:
+    Type: String
+    Description: "CIDR block of TGW subnet in AZ C"
+    Default: 10.2.32.0/24
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCidr
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: "prod-vpc"
+
+  # The management subnet is a special subnet used to hold an EC2
+  # instance that can be used to manage the cluster.
+
+  ManagementSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}a"
+      CidrBlock: !Ref ManagementSubnetCidr
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "prod-management-subnet"
+
+  # The "kubernetes.io" tags allow EKS to perform automatic subnet
+  # discovery when using kubernetes services of type LoadBalancer.
+
+  LbSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}a"
+      CidrBlock: !Ref LbSubnet1Cidr
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "prod-lb-subnet-a"
+        - Key: kubernetes.io/cluster/prod
+          Value: owned
+
+  LbSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}b"
+      CidrBlock: !Ref LbSubnet2Cidr
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "prod-lb-subnet-b"
+        - Key: kubernetes.io/cluster/prod
+          Value: owned
+
+  LbSubnet3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}c"
+      CidrBlock: !Ref LbSubnet3Cidr
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "prod-lb-subnet-c"
+        - Key: kubernetes.io/cluster/prod
+          Value: owned
+
+  # Unless we use a NAT gateway, we need to enable public IPs for the
+  # node subnets.
+
+  NodeSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}a"
+      CidrBlock: !Ref NodeSubnet1Cidr
+      MapPublicIpOnLaunch: true
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "prod-node-subnet-a"
+
+  NodeSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}b"
+      CidrBlock: !Ref NodeSubnet2Cidr
+      MapPublicIpOnLaunch: true
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "prod-node-subnet-b"
+
+  NodeSubnet3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}c"
+      CidrBlock: !Ref NodeSubnet3Cidr
+      MapPublicIpOnLaunch: true
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "prod-node-subnet-c"
+
+  # TGW subnets are only used if we are using a transit gateway. If
+  # VPC peering is being used exclusively, then we don't need the TGW
+  # subnets.
+
+  TgwSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}a"
+      CidrBlock: !Ref TgwSubnet1Cidr
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "prod-tgw-subnet-a"
+
+  TgwSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}b"
+      CidrBlock: !Ref TgwSubnet2Cidr
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "prod-tgw-subnet-b"
+
+  TgwSubnet3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}c"
+      CidrBlock: !Ref TgwSubnet3Cidr
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "prod-tgw-subnet-c"
+
+  # Create custom route tables and explicitly associate subnets to
+  # override the default route table.
+
+  ManagementRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "prod-management-rtb"
+
+  LbRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "prod-lb-rtb"
+
+  NodeRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "prod-node-rtb"
+
+  TgwRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "prod-tgw-rtb"
+
+  ManagementSubnetAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref ManagementSubnet
+      RouteTableId: !Ref ManagementRouteTable
+
+  LbSubnet1Association:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref LbSubnet1
+      RouteTableId: !Ref LbRouteTable
+
+  LbSubnet2Association:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref LbSubnet2
+      RouteTableId: !Ref LbRouteTable
+
+  LbSubnet3Association:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref LbSubnet3
+      RouteTableId: !Ref LbRouteTable
+
+  NodeSubnet1Association:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref NodeSubnet1
+      RouteTableId: !Ref NodeRouteTable
+
+  NodeSubnet2Association:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref NodeSubnet2
+      RouteTableId: !Ref NodeRouteTable
+
+  NodeSubnet3Association:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref NodeSubnet3
+      RouteTableId: !Ref NodeRouteTable
+
+  TgwSubnet1Association:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref TgwSubnet1
+      RouteTableId: !Ref TgwRouteTable
+
+  TgwSubnet2Association:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref TgwSubnet2
+      RouteTableId: !Ref TgwRouteTable
+
+  TgwSubnet3Association:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref TgwSubnet3
+      RouteTableId: !Ref TgwRouteTable
+
+  # We could lock this down further to only allow traffic to the
+  # EKS manager instance, but that rule would have to be added later
+  # on, after the EKS manager security group has been created.
+
+  ManagementInstanceConnectEndpointSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Management instance connect endpoint security group
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+          Description: Allow all outbound traffic to anywhere
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "prod-management-instance-connect-endpoint-sg"
+
+  ManagementInstanceConnectEndpoint:
+    Type: AWS::EC2::InstanceConnectEndpoint
+    Properties:
+      PreserveClientIp: false
+      SecurityGroupIds:
+        - !Ref ManagementInstanceConnectEndpointSecurityGroup
+      SubnetId: !Ref ManagementSubnet
+      Tags:
+        - Key: Name
+          Value: prod-management-eice
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: "prod-igw"
+
+  GatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  # Provides management subnet with route to internet. It would be
+  # more secure to use a NAT gateway, but that costs money, so we
+  # will stick with this for now.
+
+  ManagementRoute:
+    Type: AWS::EC2::Route
+    DependsOn: GatewayAttachment
+    Properties:
+      RouteTableId: !Ref ManagementRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+Outputs:
+  VpcId:
+    Description: "The ID of the VPC"
+    Value: !Ref VPC
+    Export:
+      Name: !Sub "${AWS::StackName}-VpcId"
+  ManagementSubnetId:
+    Description: "The ID of the management subnet"
+    Value: !Ref ManagementSubnet
+    Export:
+      Name: !Sub "${AWS::StackName}-ManagementSubnetId"
+  LbSubnet1Id:
+    Description: "The ID of the LB subnet in AZ A"
+    Value: !Ref LbSubnet1
+    Export:
+      Name: !Sub "${AWS::StackName}-LbSubnet1Id"
+  LbSubnet2Id:
+    Description: "The ID of the LB subnet in AZ B"
+    Value: !Ref LbSubnet2
+    Export:
+      Name: !Sub "${AWS::StackName}-LbSubnet2Id"
+  LbSubnet3Id:
+    Description: "The ID of the LB subnet in AZ C"
+    Value: !Ref LbSubnet3
+    Export:
+      Name: !Sub "${AWS::StackName}-LbSubnet3Id"
+  NodeSubnet1Id:
+    Description: "The ID of the node subnet in AZ A"
+    Value: !Ref NodeSubnet1
+    Export:
+      Name: !Sub "${AWS::StackName}-NodeSubnet1Id"
+  NodeSubnet2Id:
+    Description: "The ID of the node subnet in AZ B"
+    Value: !Ref NodeSubnet2
+    Export:
+      Name: !Sub "${AWS::StackName}-NodeSubnet2Id"
+  NodeSubnet3Id:
+    Description: "The ID of the node subnet in AZ C"
+    Value: !Ref NodeSubnet3
+    Export:
+      Name: !Sub "${AWS::StackName}-NodeSubnet3Id"
+  TgwSubnet1Cidr:
+    Description: "CIDR block of TGW subnet in AZ A"
+    Value: !Ref TgwSubnet1Cidr
+    Export:
+      Name: !Sub "${AWS::StackName}-TgwSubnet1Cidr"
+  TgwSubnet2Cidr:
+    Description: "CIDR block of TGW subnet in AZ B"
+    Value: !Ref TgwSubnet2Cidr
+    Export:
+      Name: !Sub "${AWS::StackName}-TgwSubnet2Cidr"
+  TgwSubnet3Cidr:
+    Description: "CIDR block of TGW subnet in AZ C"
+    Value: !Ref TgwSubnet3Cidr
+    Export:
+      Name: !Sub "${AWS::StackName}-TgwSubnet3Cidr"
+  ManagementInstanceConnectEndpointSecurityGroupId:
+    Description: "ID of management instance connect endpoint security group"
+    Value: !Ref ManagementInstanceConnectEndpointSecurityGroup
+    Export:
+      Name: !Sub "${AWS::StackName}-ManagementInstanceConnectEndpointSecurityGroupId"
