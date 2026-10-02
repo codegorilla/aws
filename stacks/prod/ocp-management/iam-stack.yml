@@ -1,0 +1,45 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Production OCP Management IAM Stack
+
+Resources:
+
+  ManagedPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: prod-ocp-management-s3-policy
+      Description: Allows downloading OCP management artifacts
+      Path: /
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ListObjectsInBucket
+            Effect: Allow
+            Action:
+              - s3:ListBucket
+            Resource:
+              - arn:aws:s3:::saber-ocp-artifacts
+          - Sid: PullObjectsFromBucket
+            Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:GetObjectVersion
+            Resource:
+              - arn:aws:s3:::saber-ocp-artifacts/*
+
+  Role:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: prod-ocp-management-role
+      Description: Role for OCP management server
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - !Ref ManagedPolicy
+

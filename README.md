@@ -182,3 +182,48 @@ args:
   - --aws-region=<your-region>
   - --aws-vpc-id=<your-vpc-id>
 
+
+
+```bash
+# Install EC2 Instance Connect packages
+HOST="amazon-ec2-instance-connect-us-west-2.s3.us-west-2.amazonaws.com"
+PACKAGE1="ec2-instance-connect-2.0.0-5.rhel9.x86_64.rpm"
+PACKAGE2="ec2-instance-connect-selinux-2.0.0-5.noarch.rpm"
+mkdir /tmp/ec2-instance-connect
+curl https://${!HOST}/latest/linux_amd64/${!PACKAGE1} -o /tmp/ec2-instance-connect/ec2-instance-connect.rpm
+curl https://${!HOST}/latest/linux_amd64/${!PACKAGE2} -o /tmp/ec2-instance-connect/ec2-instance-connect-selinux.rpm
+dnf install -y /tmp/ec2-instance-connect/ec2-instance-connect.rpm
+dnf yum install -y /tmp/ec2-instance-connect/ec2-instance-connect-selinux.rpm
+# Install AWS CLI
+#curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+#dnf install -y unzip
+#unzip awscliv2.zip
+#sudo ./aws/install
+```
+
+```yaml
+Version: "2012-10-17"
+Statement:
+  - Sid: ListObjectsInBucket
+    Effect: Allow
+    Action:
+      - s3:ListBucket
+    Resource:
+      - arn:aws:s3:::your-bucket-name
+  - Sid: PullObjectsFromBucket
+    Effect: Allow
+    Action:
+      - s3:GetObject
+      - s3:GetObjectVersion
+    Resource:
+      - arn:aws:s3:::your-bucket-name/*
+```
+
+```yaml
+Version: "2012-10-17"
+Statement:
+  - Effect: Allow
+    Principal:
+      Service: ://amazonaws.com
+    Action: sts:AssumeRole
+```
