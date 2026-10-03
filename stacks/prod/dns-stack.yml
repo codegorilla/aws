@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Production DNS stack
+
+Resources:
+
+  ForwardZone:
+    Type: AWS::Route53::HostedZone
+    Properties:
+      Name: "prod.saber.net"
+      HostedZoneConfig:
+        Comment: "DNS forward lookup zone"
+      VPCs:
+        - VPCId: !ImportValue prod-network-stack-VpcId
+          VPCRegion: us-east-2
+      HostedZoneTags:
+        - Key: Name
+          Value: forward-zone
+
+  ReverseZone:
+    Type: AWS::Route53::HostedZone
+    Properties:
+      Name: "0.10.in-addr.arpa"
+      HostedZoneConfig:
+        Comment: "DNS reverse lookup zone"
+      VPCs:
+        - VPCId: !ImportValue prod-network-stack-VpcId
+          VPCRegion: us-east-2
+      HostedZoneTags:
+        - Key: Name
+          Value: reverse-zone
+
+Outputs:
+  ForwardZoneId:
+    Description: "The ID of the Route 53 forward hosted zone"
+    Value: !Ref ForwardZone
+    Export:
+      Name: !Sub "${AWS::StackName}-ForwardZoneId"
+  ReverseZoneId:
+    Description: "The ID of the Route 53 reverse hosted zone"
+    Value: !Ref ReverseZone
+    Export:
+      Name: !Sub "${AWS::StackName}-ReverseZoneId"

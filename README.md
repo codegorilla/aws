@@ -391,7 +391,7 @@ Create install-config.yaml file:
 
 ```yaml
 apiVersion: v1
-baseDomain: saber.net
+baseDomain: prod.saber.net
 compute:
   - architecture: amd64
     hyperthreading: Enabled
@@ -405,15 +405,14 @@ controlPlane:
   platform: {}
   replicas: 3
 metadata:
-  name: prod
+  name: ocp
 platform:
   aws:
     region: us-east-2
     subnets:
-    - subnet-x
-    - subnet-y
-    - subnet-z
-    # Explicitly link your pre-existing private hosted zone if desired
+      - subnet-x
+      - subnet-y
+      - subnet-z
     hostedZone: Z0123456789ABCDEF
 publish: Internal
 pullSecret: '{"auths":{"your-mirror-registry.io":{"auth":"..."}}}'
