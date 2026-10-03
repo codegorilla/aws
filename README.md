@@ -337,3 +337,95 @@ $ oc mirror \
   docker://164599051561.dkr.ecr.us-east-2.amazonaws.com
 ```
 
+Creating IAM User for Installation
+----------------------------------
+
+Create IAM user named "svc.ocp.installer".
+
+> Note: Do not give access to AWS management console.
+
+Assign "AdministratorAccess" policy directly to the user.
+
+Create an access key for the user.
+
+Create AWS config file:
+
+```bash
+$ touch ~/.aws/config
+$ chmod 0600 ~/.aws/config
+```
+
+```ini
+[default]
+region = us-east-2
+output = json
+```
+
+Create AWS credentials file:
+
+```bash
+$ touch ~/.aws/credentials
+$ chmod 0600 ~/.aws/credentials
+```
+
+```ini
+[default]
+aws_access_key_id = ...
+aws_secret_access_key = ...
+```
+
+Generate SSH key pair.
+
+> Note: For FIPS-enabled environments, use RSA or ECDSA keys instead
+> of ed25519.
+
+```bash
+$ ssh-keygen -t ed25519 -N '' -f ~/.ssh/id_rsa_rhcos
+```
+
+Create install-config.yaml file:
+
+> Note: You must create the file by hand. In a disconnected
+> environment, the "openshift-install create cluster ..." command
+> will fail because it requires a public hosted zone to be defined.
+
+```yaml
+apiVersion: v1
+baseDomain: saber.net
+compute:
+  - architecture: amd64
+    hyperthreading: Enabled
+    name: worker
+    platform: {}
+    replicas: 2
+controlPlane:
+  architecture: amd64
+  hyperthreading: Enabled
+  name: master
+  platform: {}
+  replicas: 3
+metadata:
+  name: prod
+platform:
+  aws:
+    region: us-east-2
+    subnets:
+    - subnet-x
+    - subnet-y
+    - subnet-z
+    # Explicitly link your pre-existing private hosted zone if desired
+    hostedZone: Z0123456789ABCDEF
+publish: Internal
+pullSecret: '{"auths":{"your-mirror-registry.io":{"auth":"..."}}}'
+sshKey: |
+  ssh-rsa AAAAB3NzaC1yc...your-ssh-public-key...
+```
+
+
+> FUTURE NOTE:
+> For more information, see "Manually creating long-term credentials" and
+> "Configuring an AWS cluster to use short-term credentials".
+
+
+
+

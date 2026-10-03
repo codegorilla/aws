@@ -78,6 +78,15 @@ Resources:
   # The "kubernetes.io" tags allow EKS to perform automatic subnet
   # discovery when using kubernetes services of type LoadBalancer.
 
+  # Might need to remove the kubernetes.io tags for an OCP IPI
+  # install. Per OCP install docs, it creates the tags.
+  
+  # Also, OCP install docs, should only have one private subnet. Is
+  # this really true? What about TGW subnet? AI says that the docs
+  # are really referring to the install-config.yaml file. But it says
+  # that OCP will install LBs into the node subnets and it is up to
+  # you to change that as a "day 2" operation if you want.
+
   LbSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
