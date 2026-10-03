@@ -1,0 +1,15 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Production ECR repository creation template
+
+Resources:
+
+  RepositoryCreationTemplate:
+    Type: AWS::ECR::RepositoryCreationTemplate
+    Properties:
+      Description: Allow creation on push of repositories with openshift prefix
+      Prefix: openshift
+      AppliedFor:
+        - CREATE_ON_PUSH
+      ImageTagMutability: MUTABLE
+      EncryptionConfiguration:
+        EncryptionType: AES256

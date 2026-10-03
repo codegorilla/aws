@@ -45,6 +45,8 @@ Resources:
 
   # Use public IP so it can download RPM packages.
 
+  # TODO: Set IDMSv2
+
   Instance:
     Type: AWS::EC2::Instance
     Properties:
@@ -57,12 +59,16 @@ Resources:
             - !Ref SecurityGroup
           SubnetId: !ImportValue prod-network-stack-ManagementSubnetId
       BlockDeviceMappings:
-        - DeviceName: "/dev/xvda"
+        - DeviceName: "/dev/sda1"
           Ebs:
             VolumeType: gp3
             DeleteOnTermination: true
-            VolumeSize: 40
-      # IamInstanceProfile: !Ref InstanceProfile
+            VolumeSize: 60
+      IamInstanceProfile: !ImportValue prod-ocp-management-iam-stack-InstanceProfileName
+      MetadataOptions:
+        HttpEndpoint: enabled
+        HttpPutResponseHopLimit: 1
+        HttpTokens: required
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash
@@ -83,6 +89,8 @@ Resources:
       Tags:
         - Key: Name
           Value: "prod-ocp-management-server-instance"
+
+
 
   # ForwardRecord:
   #   Type: AWS::Route53::RecordSet

@@ -201,29 +201,125 @@ dnf yum install -y /tmp/ec2-instance-connect/ec2-instance-connect-selinux.rpm
 #sudo ./aws/install
 ```
 
-```yaml
-Version: "2012-10-17"
-Statement:
-  - Sid: ListObjectsInBucket
-    Effect: Allow
-    Action:
-      - s3:ListBucket
-    Resource:
-      - arn:aws:s3:::your-bucket-name
-  - Sid: PullObjectsFromBucket
-    Effect: Allow
-    Action:
-      - s3:GetObject
-      - s3:GetObjectVersion
-    Resource:
-      - arn:aws:s3:::your-bucket-name/*
+Updating Operating System
+-------------------------
+
+Update the operating system.
+
+> Note: The command below applies only those patches required to maintain a
+> secure baseline.
+
+```bash
+$ sudo dnf update-minimal --security
 ```
 
-```yaml
-Version: "2012-10-17"
-Statement:
-  - Effect: Allow
-    Principal:
-      Service: ://amazonaws.com
-    Action: sts:AssumeRole
+Installing OCP Utilities
+------------------------
+
+Install Cloud Credential Operator Control (ccoctl) utility.
+
+```bash
+$ aws s3 cp s3://saber-ocp-artifacts/ccoctl-linux.tar.tar .
+$ tar -xvf ccoctl-linux.tar.tar
+$ sudo cp ccoctl /usr/local/bin
+$ sudo ln -s /usr/local/bin/ccoctl /usr/bin/ccoctl
+$ rm ccoctl
 ```
+
+Install OpenShift Client (OC) utility.
+
+```bash
+$ aws s3 cp s3://saber-ocp-artifacts/openshift-client-linux-amd64-rhel9.tar.tar .
+$ tar -xvf openshift-client-linux-amd64-rhel9.tar.tar
+$ sudo cp kubectl /usr/local/bin
+$ sudo cp oc /usr/local/bin
+$ sudo ln -s /usr/local/bin/kubectl /usr/bin/kubectl
+$ sudo ln -s /usr/local/bin/oc /usr/bin/oc
+rm kubectl
+rm oc
+```
+
+Install OpenShift Client (OC) Mirror utility.
+
+```bash
+$ aws s3 cp s3://saber-ocp-artifacts/oc-mirror-rhel9-linux-amd64.tar .
+$ tar -xvf oc-mirror-rhel9-linux-amd64.tar
+$ sudo cp oc-mirror /usr/local/bin
+$ sudo ln -s /usr/local/bin/oc-mirror /usr/bin/oc-mirror
+$ rm oc-mirror
+```
+
+Install OpenShift Install utility.
+
+```bash
+$ aws s3 cp s3://saber-ocp-artifacts/openshift-install-linux.tar.tar .
+$ tar -xvf openshift-install-linux.tar.tar
+$ sudo cp openshift-install /usr/local/bin
+$ sudo ln -s /usr/local/bin/openshift-install /usr/bin/openshift-install
+$ rm openshift-install
+```
+
+Create an image set configuration:
+
+```yaml
+kind: ImageSetConfiguration
+apiVersion: mirror.openshift.io/v2alpha1
+mirror:
+  platform:
+    channels:
+      - name: stable-4.22
+        minVersion: 4.22.15
+        maxVersion: 4.22.15
+    graph: true
+  operators:
+    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.22
+      packages:
+        - name: aws-load-balancer-operator
+          channels:
+            - name: stable-v1
+```
+
+Mirror the images to disk.
+
+```
+$ oc mirror -c platform-imagesetconfig.yml file://mirror-images --v2
+```
+
+Configure ECR. It might be possible to configure a repository
+creation template so that the images can be pushed without having to
+pre-create the repositories. So far no luck.
+
+Pre-create "openshift/release" and "openshift/release-images" repositories.
+
+Get login credentials for ECR.
+
+> Note: The following command appends the credentials to the
+> $XDG_RUNTIME_DIR/containers/auth.json file. It creates the file if
+> it does not already exist.
+
+> Note: These credentials expire after 12 hours.
+
+```bash
+$ aws ecr get-login-password --region us-east-2 | podman login --username AWS --password-stdin 164599051561.dkr.ecr.us-east-2.amazonaws.com
+```
+
+Push the mirror images to the mirror registry.
+
+```bash
+$ oc mirror -c platform-imagesetconfig.yml --from file://mirror-images docker://164599051561.dkr.ecr.us-east-2.amazonaws.com --v2
+```
+
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: ECR Repository Creation Template under openshift prefix
+
+Resources:
+  RepositoryCreationTemplate:
+    Type: 'AWS::ECR::RepositoryCreationTemplate'
+    Properties:
+      Prefix: openshift
+      AppliedFor:
+        - CREATE_ON_PUSH
+      ImageTagMutability: MUTABLE
+      EncryptionConfiguration:
+        EncryptionType: AES256
