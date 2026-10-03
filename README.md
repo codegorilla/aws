@@ -298,7 +298,7 @@ Get login credentials for ECR.
 $ aws ecr get-login-password --region us-east-2 | podman login \
   --username AWS \
   --password-stdin \
-  164599051561.dkr.ecr.us-east-2.amazonaws.com
+  123456789123.dkr.ecr.us-east-2.amazonaws.com
 ```
 
 Mirror platform images to disk.
@@ -316,7 +316,7 @@ $ oc mirror \
   --v2 \
   --config platform-imagesetconfig.yml \
   --from file://platform-images \
-  docker://164599051561.dkr.ecr.us-east-2.amazonaws.com
+  docker://123456789123.dkr.ecr.us-east-2.amazonaws.com
 ```
 
 Mirror operators images to disk.
@@ -334,7 +334,7 @@ $ oc mirror \
   --v2 \
   --config operators-imagesetconfig.yml \
   --from file://operators-images \
-  docker://164599051561.dkr.ecr.us-east-2.amazonaws.com
+  docker://123456789123.dkr.ecr.us-east-2.amazonaws.com
 ```
 
 Creating IAM User for Installation
@@ -390,8 +390,11 @@ Create install-config.yaml file:
 > will fail because it requires a public hosted zone to be defined.
 
 ```yaml
+---
 apiVersion: v1
 baseDomain: prod.saber.net
+metadata:
+  name: ocp
 compute:
   - architecture: amd64
     hyperthreading: Enabled
@@ -404,15 +407,21 @@ controlPlane:
   name: master
   platform: {}
   replicas: 3
-metadata:
-  name: ocp
+imageContentSources:
+  - mirrors:
+      - 123456789123.dkr.ecr.us-east-2.amazonaws.com/openshift/release
+    source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
+  - mirrors:
+      - 123456789123.dkr.ecr.us-east-2.amazonaws.com/openshift/release-images
+    source: quay.io/openshift-release-dev/ocp-release
 platform:
   aws:
     region: us-east-2
-    subnets:
-      - subnet-x
-      - subnet-y
-      - subnet-z
+    vpc:
+      subnets:
+        - id: subnet-1
+        - id: subnet-2
+        - id: subnet-3
     hostedZone: Z0123456789ABCDEF
 publish: Internal
 pullSecret: '{"auths":{"your-mirror-registry.io":{"auth":"..."}}}'
@@ -420,11 +429,97 @@ sshKey: |
   ssh-rsa AAAAB3NzaC1yc...your-ssh-public-key...
 ```
 
+Fill in the SSH key field with your public SSH key.
+
+Fill in the pull secret field with new AWS ECR credentials.
+
+Fill in the image content sources.
+
+OCP docs say to use this. I believe this is not correct.
+
+```yaml
+imageContentSources:
+  - mirrors:
+      - 123456789123.dkr.ecr.us-east-2.amazonaws.com:5000/openshift/release
+    source: quay.io/openshift-release-dev/ocp-release
+  - mirrors:
+      - 123456789123.dkr.ecr.us-east-2.amazonaws.com:5000/openshift/release
+    source: registry.redhat.io/ocp/release
+```
+
+But the oc-mirror content says to use this. I believe this might be
+more correct.
+
+```yaml
+imageContentSources:
+  - mirrors:
+      - 123456789123.dkr.ecr.us-east-2.amazonaws.com/openshift/release
+    source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
+  - mirrors:
+      - 123456789123.dkr.ecr.us-east-2.amazonaws.com/openshift/release-images
+    source: quay.io/openshift-release-dev/ocp-release
+```
 
 > FUTURE NOTE:
 > For more information, see "Manually creating long-term credentials" and
 > "Configuring an AWS cluster to use short-term credentials".
 
 
+Amazon Root CA 1 is not really a root CA?
 
+-----BEGIN CERTIFICATE-----
+MIIEkjCCA3qgAwIBAgITBn+USionzfP6wq4rAfkI7rnExjANBgkqhkiG9w0BAQsF
+ADCBmDELMAkGA1UEBhMCVVMxEDAOBgNVBAgTB0FyaXpvbmExEzARBgNVBAcTClNj
+b3R0c2RhbGUxJTAjBgNVBAoTHFN0YXJmaWVsZCBUZWNobm9sb2dpZXMsIEluYy4x
+OzA5BgNVBAMTMlN0YXJmaWVsZCBTZXJ2aWNlcyBSb290IENlcnRpZmljYXRlIEF1
+dGhvcml0eSAtIEcyMB4XDTE1MDUyNTEyMDAwMFoXDTM3MTIzMTAxMDAwMFowOTEL
+MAkGA1UEBhMCVVMxDzANBgNVBAoTBkFtYXpvbjEZMBcGA1UEAxMQQW1hem9uIFJv
+b3QgQ0EgMTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALJ4gHHKeNXj
+ca9HgFB0fW7Y14h29Jlo91ghYPl0hAEvrAIthtOgQ3pOsqTQNroBvo3bSMgHFzZM
+9O6II8c+6zf1tRn4SWiw3te5djgdYZ6k/oI2peVKVuRF4fn9tBb6dNqcmzU5L/qw
+IFAGbHrQgLKm+a/sRxmPUDgH3KKHOVj4utWp+UhnMJbulHheb4mjUcAwhmahRWa6
+VOujw5H5SNz/0egwLX0tdHA114gk957EWW67c4cX8jJGKLhD+rcdqsq08p8kDi1L
+93FcXmn/6pUCyziKrlA4b9v7LWIbxcceVOF34GfID5yHI9Y/QCB/IIDEgEw+OyQm
+jgSubJrIqg0CAwEAAaOCATEwggEtMA8GA1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/
+BAQDAgGGMB0GA1UdDgQWBBSEGMyFNOy8DJSULghZnMeyEE4KCDAfBgNVHSMEGDAW
+gBScXwDfqgHXMCs4iKK4bUqc8hGRgzB4BggrBgEFBQcBAQRsMGowLgYIKwYBBQUH
+MAGGImh0dHA6Ly9vY3NwLnJvb3RnMi5hbWF6b250cnVzdC5jb20wOAYIKwYBBQUH
+MAKGLGh0dHA6Ly9jcnQucm9vdGcyLmFtYXpvbnRydXN0LmNvbS9yb290ZzIuY2Vy
+MD0GA1UdHwQ2MDQwMqAwoC6GLGh0dHA6Ly9jcmwucm9vdGcyLmFtYXpvbnRydXN0
+LmNvbS9yb290ZzIuY3JsMBEGA1UdIAQKMAgwBgYEVR0gADANBgkqhkiG9w0BAQsF
+AAOCAQEAYjdCXLwQtT6LLOkMm2xF4gcAevnFWAu5CIw+7bMlPLVvUOTNNWqnkzSW
+MiGpSESrnO09tKpzbeR/FoCJbM8oAxiDR3mjEH4wW6w7sGDgd9QIpuEdfF7Au/ma
+eyKdpwAJfqxGF4PcnCZXmTA5YpaP7dreqsXMGz7KQ2hsVxa81Q4gLv7/wmpdLqBK
+bRRYh5TmOTFffHPLkIhqhBGWJ6bt2YFGpn6jcgAKUj6DiAdjd4lpFw85hdKrCEVN
+0FE6/V1dN2RMfjCyVSRCnTawXZwXgWHxyvkQAiSr6w10kY17RSlQOYiypok1JR4U
+akcjMS9cmvqtmg5iUaQqqcT5NJ0hGA==
+-----END CERTIFICATE-----
 
+-----BEGIN CERTIFICATE-----
+MIIDQTCCAimgAwIBAgITBmyfz5m/jAo54vB4ikPmljZbyjANBgkqhkiG9w0BAQsF
+ADA5MQswCQYDVQQGEwJVUzEPMA0GA1UEChMGQW1hem9uMRkwFwYDVQQDExBBbWF6
+b24gUm9vdCBDQSAxMB4XDTE1MDUyNjAwMDAwMFoXDTM4MDExNzAwMDAwMFowOTEL
+MAkGA1UEBhMCVVMxDzANBgNVBAoTBkFtYXpvbjEZMBcGA1UEAxMQQW1hem9uIFJv
+b3QgQ0EgMTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALJ4gHHKeNXj
+ca9HgFB0fW7Y14h29Jlo91ghYPl0hAEvrAIthtOgQ3pOsqTQNroBvo3bSMgHFzZM
+9O6II8c+6zf1tRn4SWiw3te5djgdYZ6k/oI2peVKVuRF4fn9tBb6dNqcmzU5L/qw
+IFAGbHrQgLKm+a/sRxmPUDgH3KKHOVj4utWp+UhnMJbulHheb4mjUcAwhmahRWa6
+VOujw5H5SNz/0egwLX0tdHA114gk957EWW67c4cX8jJGKLhD+rcdqsq08p8kDi1L
+93FcXmn/6pUCyziKrlA4b9v7LWIbxcceVOF34GfID5yHI9Y/QCB/IIDEgEw+OyQm
+jgSubJrIqg0CAwEAAaNCMEAwDwYDVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMC
+AYYwHQYDVR0OBBYEFIQYzIU07LwMlJQuCFmcx7IQTgoIMA0GCSqGSIb3DQEBCwUA
+A4IBAQCY8jdaQZChGsV2USggNiMOruYou6r4lK5IpDB/G/wkjUu0yKGX9rbxenDI
+U5PMCCjjmCXPI6T53iHTfIUJrU6adTrCC2qJeHZERxhlbI1Bjjt/msv0tadQ1wUs
+N+gDS63pYaACbvXy8MWy7Vu33PqUXHeeE6V/Uq2V8viTO96LXFvKWlJbYK8U90vv
+o/ufQJVtMVT8QtPHRh8jrdkPSHCa2XV4cdFyQzR1bldZwgJcJmApzyMZFo6IQ6XU
+5MsI+yMRQ+hDKXJioaldXgjUkK642M4UwtBV8ob2xJNDd2ZhwLnoQdeXeGADbkpy
+rqXRfboQnoZsG4q5WTP468SQvvG5
+-----END CERTIFICATE-----
+
+platform:
+  aws:
+    vpc:
+      subnets:
+        - id: subnet-<id_1>
+        - id: subnet-<id_2>
+        - id: subnet-<id_3>
