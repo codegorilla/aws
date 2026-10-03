@@ -3,11 +3,48 @@ Description: Production ECR repository creation template
 
 Resources:
 
-  RepositoryCreationTemplate:
+  # Needed for platform images
+
+  OpenshiftRepositoryCreationTemplate:
     Type: AWS::ECR::RepositoryCreationTemplate
     Properties:
       Description: Allow creation on push of repositories with openshift prefix
       Prefix: openshift
+      AppliedFor:
+        - CREATE_ON_PUSH
+      ImageTagMutability: MUTABLE
+      EncryptionConfiguration:
+        EncryptionType: AES256
+
+  # Needed for operators images
+
+  AlboRepositoryCreationTemplate:
+    Type: AWS::ECR::RepositoryCreationTemplate
+    Properties:
+      Description: Allow creation on push of repositories with albo prefix
+      Prefix: albo
+      AppliedFor:
+        - CREATE_ON_PUSH
+      ImageTagMutability: MUTABLE
+      EncryptionConfiguration:
+        EncryptionType: AES256
+
+  Openshift4RepositoryCreationTemplate:
+    Type: AWS::ECR::RepositoryCreationTemplate
+    Properties:
+      Description: Allow creation on push of repositories with openshift4 prefix
+      Prefix: openshift4
+      AppliedFor:
+        - CREATE_ON_PUSH
+      ImageTagMutability: MUTABLE
+      EncryptionConfiguration:
+        EncryptionType: AES256
+
+  RedhatRepositoryCreationTemplate:
+    Type: AWS::ECR::RepositoryCreationTemplate
+    Properties:
+      Description: Allow creation on push of repositories with redhat prefix
+      Prefix: redhat
       AppliedFor:
         - CREATE_ON_PUSH
       ImageTagMutability: MUTABLE

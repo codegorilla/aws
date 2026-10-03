@@ -281,45 +281,50 @@ mirror:
 
 Mirror the images to disk.
 
+```bash
+$ oc mirror --v2 \
+  --config platform-imagesetconfig.yml \
+  file://platform-images
 ```
-$ oc mirror -c platform-imagesetconfig.yml file://mirror-images --v2
-```
-
-Configure ECR. It might be possible to configure a repository
-creation template so that the images can be pushed without having to
-pre-create the repositories. So far no luck.
-
-Pre-create "openshift/release" and "openshift/release-images" repositories.
 
 Get login credentials for ECR.
 
-> Note: The following command appends the credentials to the
+> Note: The following command appends ECR credentials to the
 > $XDG_RUNTIME_DIR/containers/auth.json file. It creates the file if
-> it does not already exist.
-
-> Note: These credentials expire after 12 hours.
+> it does not already exist. These credentials expire after 12 hours.
 
 ```bash
-$ aws ecr get-login-password --region us-east-2 | podman login --username AWS --password-stdin 164599051561.dkr.ecr.us-east-2.amazonaws.com
+$ aws ecr get-login-password --region us-east-2 | podman login \
+  --username AWS \
+  --password-stdin \
+  164599051561.dkr.ecr.us-east-2.amazonaws.com
 ```
 
-Push the mirror images to the mirror registry.
+Push the mirror images to ECR.
 
 ```bash
-$ oc mirror -c platform-imagesetconfig.yml --from file://mirror-images docker://164599051561.dkr.ecr.us-east-2.amazonaws.com --v2
+$ oc mirror \
+  --v2 \
+  --config platform-imagesetconfig.yml \
+  --from file://platform-images \
+  docker://164599051561.dkr.ecr.us-east-2.amazonaws.com
 ```
 
+Mirror operator images to disk.
 
-AWSTemplateFormatVersion: '2010-09-09'
-Description: ECR Repository Creation Template under openshift prefix
+```bash
+$ oc mirror --v2 \
+  --config operators-imagesetconfig.yml \
+  file://operators-images
+```
 
-Resources:
-  RepositoryCreationTemplate:
-    Type: 'AWS::ECR::RepositoryCreationTemplate'
-    Properties:
-      Prefix: openshift
-      AppliedFor:
-        - CREATE_ON_PUSH
-      ImageTagMutability: MUTABLE
-      EncryptionConfiguration:
-        EncryptionType: AES256
+Push the mirror images to ECR.
+
+```bash
+$ oc mirror \
+  --v2 \
+  --config operators-imagesetconfig.yml \
+  --from file://operators-images \
+  docker://164599051561.dkr.ecr.us-east-2.amazonaws.com
+```
+
