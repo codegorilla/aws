@@ -399,30 +399,39 @@ compute:
   - architecture: amd64
     hyperthreading: Enabled
     name: worker
-    platform: {}
-    replicas: 2
+    platform:
+      aws:
+        type: m6i.large
+  replicas: 2
 controlPlane:
   architecture: amd64
   hyperthreading: Enabled
   name: master
   platform: {}
   replicas: 3
-imageContentSources:
+imageDigestSources:
   - mirrors:
       - 123456789123.dkr.ecr.us-east-2.amazonaws.com/openshift/release
     source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
   - mirrors:
       - 123456789123.dkr.ecr.us-east-2.amazonaws.com/openshift/release-images
     source: quay.io/openshift-release-dev/ocp-release
+networking:
+  clusterNetwork:
+    - cidr: 10.128.0.0/16
+      hostPrefix: 24
+  machineNetwork:
+    - cidr: 10.2.0.0/16
 platform:
   aws:
+    hostedZone: Z0123456789ABCDEF
+    ipFamily: IPv4
     region: us-east-2
     vpc:
       subnets:
         - id: subnet-1
         - id: subnet-2
         - id: subnet-3
-    hostedZone: Z0123456789ABCDEF
 publish: Internal
 pullSecret: '{"auths":{"your-mirror-registry.io":{"auth":"..."}}}'
 sshKey: |
@@ -434,6 +443,10 @@ Fill in the SSH key field with your public SSH key.
 Fill in the pull secret field with new AWS ECR credentials.
 
 Fill in the image content sources.
+
+> Note: I am getting the following:
+> WARNING imageContentSources is deprecated, please use ImageDigestSources
+> Might want to try switching to see what happens
 
 OCP docs say to use this. I believe this is not correct.
 
@@ -516,10 +529,7 @@ o/ufQJVtMVT8QtPHRh8jrdkPSHCa2XV4cdFyQzR1bldZwgJcJmApzyMZFo6IQ6XU
 rqXRfboQnoZsG4q5WTP468SQvvG5
 -----END CERTIFICATE-----
 
-platform:
-  aws:
-    vpc:
-      subnets:
-        - id: subnet-<id_1>
-        - id: subnet-<id_2>
-        - id: subnet-<id_3>
+
+```bash
+$ openshift-install create cluster --dir=./cluster --log-level=info
+```

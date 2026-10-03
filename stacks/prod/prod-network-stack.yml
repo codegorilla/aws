@@ -74,6 +74,8 @@ Resources:
       Tags:
         - Key: Name
           Value: "prod-management-subnet"
+        - Key: kubernetes.io/cluster/unmanaged
+          Value: "true"
 
   # The "kubernetes.io" tags allow EKS to perform automatic subnet
   # discovery when using kubernetes services of type LoadBalancer.
@@ -97,8 +99,8 @@ Resources:
       Tags:
         - Key: Name
           Value: "prod-lb-subnet-a"
-        - Key: kubernetes.io/cluster/prod
-          Value: owned
+        - Key: kubernetes.io/cluster/unmanaged
+          Value: "true"
 
   LbSubnet2:
     Type: AWS::EC2::Subnet
@@ -110,8 +112,8 @@ Resources:
       Tags:
         - Key: Name
           Value: "prod-lb-subnet-b"
-        - Key: kubernetes.io/cluster/prod
-          Value: owned
+        - Key: kubernetes.io/cluster/unmanaged
+          Value: "true"
 
   LbSubnet3:
     Type: AWS::EC2::Subnet
@@ -123,8 +125,8 @@ Resources:
       Tags:
         - Key: Name
           Value: "prod-lb-subnet-c"
-        - Key: kubernetes.io/cluster/prod
-          Value: owned
+        - Key: kubernetes.io/cluster/unmanaged
+          Value: "true"
 
   # Unless we use a NAT gateway, we need to enable public IPs for the
   # node subnets.
@@ -176,6 +178,8 @@ Resources:
       Tags:
         - Key: Name
           Value: "prod-tgw-subnet-a"
+        - Key: kubernetes.io/cluster/unmanaged
+          Value: "true"
 
   TgwSubnet2:
     Type: AWS::EC2::Subnet
@@ -187,6 +191,8 @@ Resources:
       Tags:
         - Key: Name
           Value: "prod-tgw-subnet-b"
+        - Key: kubernetes.io/cluster/unmanaged
+          Value: "true"
 
   TgwSubnet3:
     Type: AWS::EC2::Subnet
@@ -198,6 +204,8 @@ Resources:
       Tags:
         - Key: Name
           Value: "prod-tgw-subnet-c"
+        - Key: kubernetes.io/cluster/unmanaged
+          Value: "true"
 
   # Create custom route tables and explicitly associate subnets to
   # override the default route table.
