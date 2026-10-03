@@ -259,7 +259,10 @@ $ sudo ln -s /usr/local/bin/openshift-install /usr/bin/openshift-install
 $ rm openshift-install
 ```
 
-Create an image set configuration:
+Mirroring OCP Container Images
+------------------------------
+
+Create platform and operators image set configurations:
 
 ```yaml
 kind: ImageSetConfiguration
@@ -271,20 +274,18 @@ mirror:
         minVersion: 4.22.15
         maxVersion: 4.22.15
     graph: true
+```
+
+```yaml
+kind: ImageSetConfiguration
+apiVersion: mirror.openshift.io/v2alpha1
+mirror:
   operators:
     - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.22
       packages:
         - name: aws-load-balancer-operator
           channels:
             - name: stable-v1
-```
-
-Mirror the images to disk.
-
-```bash
-$ oc mirror --v2 \
-  --config platform-imagesetconfig.yml \
-  file://platform-images
 ```
 
 Get login credentials for ECR.
@@ -300,7 +301,15 @@ $ aws ecr get-login-password --region us-east-2 | podman login \
   164599051561.dkr.ecr.us-east-2.amazonaws.com
 ```
 
-Push the mirror images to ECR.
+Mirror platform images to disk.
+
+```bash
+$ oc mirror --v2 \
+  --config platform-imagesetconfig.yml \
+  file://platform-images
+```
+
+Push platform images to ECR.
 
 ```bash
 $ oc mirror \
@@ -310,7 +319,7 @@ $ oc mirror \
   docker://164599051561.dkr.ecr.us-east-2.amazonaws.com
 ```
 
-Mirror operator images to disk.
+Mirror operators images to disk.
 
 ```bash
 $ oc mirror --v2 \
@@ -318,7 +327,7 @@ $ oc mirror --v2 \
   file://operators-images
 ```
 
-Push the mirror images to ECR.
+Push operators images to ECR.
 
 ```bash
 $ oc mirror \
