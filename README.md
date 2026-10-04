@@ -442,36 +442,7 @@ Fill in the SSH key field with your public SSH key.
 
 Fill in the pull secret field with new AWS ECR credentials.
 
-Fill in the image content sources.
-
-> Note: I am getting the following:
-> WARNING imageContentSources is deprecated, please use ImageDigestSources
-> Might want to try switching to see what happens
-
-OCP docs say to use this. I believe this is not correct.
-
-```yaml
-imageContentSources:
-  - mirrors:
-      - 123456789123.dkr.ecr.us-east-2.amazonaws.com:5000/openshift/release
-    source: quay.io/openshift-release-dev/ocp-release
-  - mirrors:
-      - 123456789123.dkr.ecr.us-east-2.amazonaws.com:5000/openshift/release
-    source: registry.redhat.io/ocp/release
-```
-
-But the oc-mirror content says to use this. I believe this might be
-more correct.
-
-```yaml
-imageContentSources:
-  - mirrors:
-      - 123456789123.dkr.ecr.us-east-2.amazonaws.com/openshift/release
-    source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
-  - mirrors:
-      - 123456789123.dkr.ecr.us-east-2.amazonaws.com/openshift/release-images
-    source: quay.io/openshift-release-dev/ocp-release
-```
+Fill in the image digest sources.
 
 > FUTURE NOTE:
 > For more information, see "Manually creating long-term credentials" and
@@ -530,6 +501,69 @@ rqXRfboQnoZsG4q5WTP468SQvvG5
 -----END CERTIFICATE-----
 
 
+Create the cluster.
+
 ```bash
 $ openshift-install create cluster --dir=./cluster --log-level=info
 ```
+
+If necessary, destroy the cluster.
+
+```bash
+$ openshift-install destroy cluster --dir=./cluster --log-level=info
+```
+
+
+
+$ openshift-install create cluster --dir=./cluster --log-level=info
+INFO Credentials loaded from the AWS config using "SharedConfigCredentials: /home/ec2-user/.aws/credentials" provider 
+INFO Successfully populated MCS CA cert information: root-ca 2036-09-30T23:22:17Z 2026-10-03T23:22:17Z 
+INFO Successfully populated MCS TLS cert information: root-ca 2036-09-30T23:22:17Z 2026-10-03T23:22:17Z 
+INFO Consuming Install Config from target directory 
+WARNING Following quotas ec2/L-1216C47A (us-east-2) are available but will be completely used pretty soon. 
+INFO Adding clusters...                           
+INFO Creating infrastructure resources...         
+INFO Reconciling IAM roles for control-plane and compute nodes 
+INFO Creating IAM role for master                 
+INFO Creating IAM role for worker                 
+INFO Started local control plane with envtest     
+INFO Stored kubeconfig for envtest in: /home/ec2-user/ocp/cluster/.clusterapi_output/envtest.kubeconfig 
+INFO Running process: Cluster API with args [-v=2 --diagnostics-address=0 --health-addr=127.0.0.1:33079 --webhook-port=40713 --webhook-cert-dir=/tmp/envtest-serving-certs-2703316291 --kubeconfig=/home/ec2-user/ocp/cluster/.clusterapi_output/envtest.kubeconfig] 
+INFO Running process: aws infrastructure provider with args [-v=4 --diagnostics-address=0 --health-addr=127.0.0.1:42099 --webhook-port=33353 --webhook-cert-dir=/tmp/envtest-serving-certs-317887595 --feature-gates=BootstrapFormatIgnition=true,ExternalResourceGC=true,TagUnmanagedNetworkResources=false,EKS=false,MachinePool=false --kubeconfig=/home/ec2-user/ocp/cluster/.clusterapi_output/envtest.kubeconfig] 
+INFO Creating infra manifests...                  
+INFO Created manifest *v1.Namespace, namespace= name=openshift-cluster-api-guests 
+INFO Created manifest *v1beta2.AWSClusterControllerIdentity, namespace= name=default 
+I1003 23:23:03.181012    2507 warning_handler.go:65] "cluster.x-k8s.io/v1beta1 Cluster is deprecated; use cluster.x-k8s.io/v1beta2 Cluster" logger="KubeAPIWarningLogger"
+INFO Created manifest *v1beta1.Cluster, namespace=openshift-cluster-api-guests name=ocp-6l7hn 
+INFO Created manifest *v1beta2.AWSCluster, namespace=openshift-cluster-api-guests name=ocp-6l7hn 
+INFO Done creating infra manifests                
+INFO Creating kubeconfig entry for capi cluster ocp-6l7hn 
+INFO Waiting up to 15m0s (until 11:38PM UTC) for network infrastructure to become ready... 
+INFO Network infrastructure is ready              
+INFO Creating Route53 records for control plane load balancer 
+INFO Created manifest *v1beta2.AWSMachine, namespace=openshift-cluster-api-guests name=ocp-6l7hn-bootstrap 
+INFO Created manifest *v1beta2.AWSMachine, namespace=openshift-cluster-api-guests name=ocp-6l7hn-master-0 
+INFO Created manifest *v1beta2.AWSMachine, namespace=openshift-cluster-api-guests name=ocp-6l7hn-master-1 
+INFO Created manifest *v1beta2.AWSMachine, namespace=openshift-cluster-api-guests name=ocp-6l7hn-master-2 
+I1003 23:27:05.428286    2507 warning_handler.go:65] "cluster.x-k8s.io/v1beta1 Machine is deprecated; use cluster.x-k8s.io/v1beta2 Machine" logger="KubeAPIWarningLogger"
+INFO Created manifest *v1beta1.Machine, namespace=openshift-cluster-api-guests name=ocp-6l7hn-bootstrap 
+INFO Created manifest *v1beta1.Machine, namespace=openshift-cluster-api-guests name=ocp-6l7hn-master-0 
+INFO Created manifest *v1beta1.Machine, namespace=openshift-cluster-api-guests name=ocp-6l7hn-master-1 
+INFO Created manifest *v1beta1.Machine, namespace=openshift-cluster-api-guests name=ocp-6l7hn-master-2 
+INFO Created manifest *v1.Secret, namespace=openshift-cluster-api-guests name=ocp-6l7hn-bootstrap 
+INFO Created manifest *v1.Secret, namespace=openshift-cluster-api-guests name=ocp-6l7hn-master 
+INFO Created manifest *v1.Secret, namespace=openshift-cluster-api-guests name=ocp-6l7hn-worker 
+INFO Waiting up to 15m0s (until 11:42PM UTC) for machines [ocp-6l7hn-bootstrap ocp-6l7hn-master-0 ocp-6l7hn-master-1 ocp-6l7hn-master-2] to provision... 
+INFO Control-plane machines are ready             
+INFO Cluster API resources have been created. Waiting for cluster to become ready... 
+INFO Waiting up to 20m0s (until 11:47PM UTC) for the Kubernetes API at https://api.ocp.prod.saber.net:6443...
+
+
+Also, cannot fetch ignition. I think I need S3 gateway endpoint
+because it is not assigning public IPs to bootstrap node.
+
+The S3 gateway endpoint definitely helped, but I think I need the EC2 ones.
+
+Another thing I could do is manually turn on auto-assign public IP and see if that helps.
+
+
