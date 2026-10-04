@@ -507,56 +507,27 @@ Create the cluster.
 $ openshift-install create cluster --dir=./cluster --log-level=info
 ```
 
+If you are interrupted, use the following command.
+
+```bash
+$ openshift-install wait-for install-complete --dir=./cluster --log-level=info
+```
+
 If necessary, destroy the cluster.
+
+> Note: Do not do this unless the cluster install fails or hangs and
+> you have no other recourse.
 
 ```bash
 $ openshift-install destroy cluster --dir=./cluster --log-level=info
 ```
 
+Copy kubeconfig file to ~/.kube directory.
 
+```bash
+$ cp cluster/auth/kubeconfig ~/.kube/config
+```
 
-$ openshift-install create cluster --dir=./cluster --log-level=info
-INFO Credentials loaded from the AWS config using "SharedConfigCredentials: /home/ec2-user/.aws/credentials" provider 
-INFO Successfully populated MCS CA cert information: root-ca 2036-09-30T23:22:17Z 2026-10-03T23:22:17Z 
-INFO Successfully populated MCS TLS cert information: root-ca 2036-09-30T23:22:17Z 2026-10-03T23:22:17Z 
-INFO Consuming Install Config from target directory 
-WARNING Following quotas ec2/L-1216C47A (us-east-2) are available but will be completely used pretty soon. 
-INFO Adding clusters...                           
-INFO Creating infrastructure resources...         
-INFO Reconciling IAM roles for control-plane and compute nodes 
-INFO Creating IAM role for master                 
-INFO Creating IAM role for worker                 
-INFO Started local control plane with envtest     
-INFO Stored kubeconfig for envtest in: /home/ec2-user/ocp/cluster/.clusterapi_output/envtest.kubeconfig 
-INFO Running process: Cluster API with args [-v=2 --diagnostics-address=0 --health-addr=127.0.0.1:33079 --webhook-port=40713 --webhook-cert-dir=/tmp/envtest-serving-certs-2703316291 --kubeconfig=/home/ec2-user/ocp/cluster/.clusterapi_output/envtest.kubeconfig] 
-INFO Running process: aws infrastructure provider with args [-v=4 --diagnostics-address=0 --health-addr=127.0.0.1:42099 --webhook-port=33353 --webhook-cert-dir=/tmp/envtest-serving-certs-317887595 --feature-gates=BootstrapFormatIgnition=true,ExternalResourceGC=true,TagUnmanagedNetworkResources=false,EKS=false,MachinePool=false --kubeconfig=/home/ec2-user/ocp/cluster/.clusterapi_output/envtest.kubeconfig] 
-INFO Creating infra manifests...                  
-INFO Created manifest *v1.Namespace, namespace= name=openshift-cluster-api-guests 
-INFO Created manifest *v1beta2.AWSClusterControllerIdentity, namespace= name=default 
-I1003 23:23:03.181012    2507 warning_handler.go:65] "cluster.x-k8s.io/v1beta1 Cluster is deprecated; use cluster.x-k8s.io/v1beta2 Cluster" logger="KubeAPIWarningLogger"
-INFO Created manifest *v1beta1.Cluster, namespace=openshift-cluster-api-guests name=ocp-6l7hn 
-INFO Created manifest *v1beta2.AWSCluster, namespace=openshift-cluster-api-guests name=ocp-6l7hn 
-INFO Done creating infra manifests                
-INFO Creating kubeconfig entry for capi cluster ocp-6l7hn 
-INFO Waiting up to 15m0s (until 11:38PM UTC) for network infrastructure to become ready... 
-INFO Network infrastructure is ready              
-INFO Creating Route53 records for control plane load balancer 
-INFO Created manifest *v1beta2.AWSMachine, namespace=openshift-cluster-api-guests name=ocp-6l7hn-bootstrap 
-INFO Created manifest *v1beta2.AWSMachine, namespace=openshift-cluster-api-guests name=ocp-6l7hn-master-0 
-INFO Created manifest *v1beta2.AWSMachine, namespace=openshift-cluster-api-guests name=ocp-6l7hn-master-1 
-INFO Created manifest *v1beta2.AWSMachine, namespace=openshift-cluster-api-guests name=ocp-6l7hn-master-2 
-I1003 23:27:05.428286    2507 warning_handler.go:65] "cluster.x-k8s.io/v1beta1 Machine is deprecated; use cluster.x-k8s.io/v1beta2 Machine" logger="KubeAPIWarningLogger"
-INFO Created manifest *v1beta1.Machine, namespace=openshift-cluster-api-guests name=ocp-6l7hn-bootstrap 
-INFO Created manifest *v1beta1.Machine, namespace=openshift-cluster-api-guests name=ocp-6l7hn-master-0 
-INFO Created manifest *v1beta1.Machine, namespace=openshift-cluster-api-guests name=ocp-6l7hn-master-1 
-INFO Created manifest *v1beta1.Machine, namespace=openshift-cluster-api-guests name=ocp-6l7hn-master-2 
-INFO Created manifest *v1.Secret, namespace=openshift-cluster-api-guests name=ocp-6l7hn-bootstrap 
-INFO Created manifest *v1.Secret, namespace=openshift-cluster-api-guests name=ocp-6l7hn-master 
-INFO Created manifest *v1.Secret, namespace=openshift-cluster-api-guests name=ocp-6l7hn-worker 
-INFO Waiting up to 15m0s (until 11:42PM UTC) for machines [ocp-6l7hn-bootstrap ocp-6l7hn-master-0 ocp-6l7hn-master-1 ocp-6l7hn-master-2] to provision... 
-INFO Control-plane machines are ready             
-INFO Cluster API resources have been created. Waiting for cluster to become ready... 
-INFO Waiting up to 20m0s (until 11:47PM UTC) for the Kubernetes API at https://api.ocp.prod.saber.net:6443...
 
 
 Also, cannot fetch ignition. I think I need S3 gateway endpoint
@@ -565,5 +536,83 @@ because it is not assigning public IPs to bootstrap node.
 The S3 gateway endpoint definitely helped, but I think I need the EC2 ones.
 
 Another thing I could do is manually turn on auto-assign public IP and see if that helps.
+That DID seem to help.
 
+Ran out of vCPU quota and had to request an increase from 16 to 20.
+
+```bash
+$ oc get machines -n openshift-machine-api
+```
+
+Two machines were failed because there was not enough vCPU in our
+quota. Increased quota from 16 to 20. Deleted failed machines, which
+triggered new ones appearing.
+
+
+```bash
+$ oc get no
+NAME                                        STATUS   ROLES                  AGE   VERSION
+ip-10-2-20-250.us-east-2.compute.internal   Ready    control-plane,master   71m   v1.35.6
+ip-10-2-21-249.us-east-2.compute.internal   Ready    control-plane,master   70m   v1.35.6
+ip-10-2-21-76.us-east-2.compute.internal    Ready    worker                 14m   v1.35.6
+ip-10-2-22-137.us-east-2.compute.internal   Ready    worker                 14m   v1.35.6
+ip-10-2-22-210.us-east-2.compute.internal   Ready    control-plane,master   71m   v1.35.6
+```
+
+```bash
+$ oc get mcp
+NAME     CONFIG                                             UPDATED   UPDATING   DEGRADED   MACHINECOUNT   READYMACHINECOUNT   UPDATEDMACHINECOUNT   DEGRADEDMACHINECOUNT   AGE
+master   rendered-master-b97e1de21e909175d3759f87dcfcee88   True      False      False      3              3                   3                     0                      69m
+worker   rendered-worker-1ae974bb5c94643c71556de35edc5017   True      False      False      2              2                   2                     0                      69m
+```
+
+```bash
+$ oc get co
+NAME                                       VERSION   AVAILABLE   PROGRESSING   DEGRADED   SINCE   MESSAGE
+authentication                             4.22.15   True        False         False      2m43s
+baremetal                                  4.22.15   True        False         False      68m
+cloud-controller-manager                   4.22.15   True        False         False      70m
+cloud-credential                           4.22.15   True        False         False      56m
+cluster-autoscaler                         4.22.15   True        False         False      68m
+config-operator                            4.22.15   True        False         False      69m
+console                                    4.22.15   True        False         False      10m
+control-plane-machine-set                  4.22.15   True        False         False      68m
+csi-snapshot-controller                    4.22.15   True        False         False      68m
+dns                                        4.22.15   True        False         False      68m
+etcd                                       4.22.15   True        False         False      67m
+image-registry                             4.22.15   True        False         False      13m
+ingress                                    4.22.15   True        False         False      13m
+insights                                   4.22.15   True        False         False      63m
+kube-apiserver                             4.22.15   True        False         False      59m
+kube-controller-manager                    4.22.15   True        False         False      64m
+kube-scheduler                             4.22.15   True        False         False      66m
+kube-storage-version-migrator              4.22.15   True        False         False      69m
+machine-api                                4.22.15   True        False         False      14m
+machine-approver                           4.22.15   True        False         False      69m
+machine-config                             4.22.15   True        False         False      69m
+marketplace                                4.22.15   True        False         False      69m
+monitoring                                 4.22.15   True        False         False      6m12s
+network                                    4.22.15   True        False         False      70m
+node-tuning                                4.22.15   True        False         False      13m
+olm                                        4.22.15   True        False         False      68m
+openshift-apiserver                        4.22.15   True        False         False      56m
+openshift-controller-manager               4.22.15   True        False         False      58m
+openshift-samples                          4.22.15   True        False         False      54m
+operator-lifecycle-manager                 4.22.15   True        False         False      68m
+operator-lifecycle-manager-catalog         4.22.15   True        False         False      68m
+operator-lifecycle-manager-packageserver   4.22.15   True        False         False      55m
+service-ca                                 4.22.15   True        False         False      69m
+storage                                    4.22.15   True        False         False      67m
+```
+
+System reported install complete:
+
+```
+INFO Install complete!
+INFO To access the cluster as the system:admin user when using 'oc', run
+INFO     export KUBECONFIG=/home/ec2-user/ocp/cluster/auth/kubeconfig
+INFO Access the OpenShift web-console here: https://console-openshift-console.apps.ocp.prod.saber.net
+INFO Login to the console with user: "***", and password: "***"
+INFO Time elapsed: 12m2s
+```
 
