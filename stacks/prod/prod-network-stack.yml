@@ -136,7 +136,7 @@ Resources:
     Properties:
       AvailabilityZone: !Sub "${AWS::Region}a"
       CidrBlock: !Ref NodeSubnet1Cidr
-      MapPublicIpOnLaunch: true
+      MapPublicIpOnLaunch: false
       VpcId: !Ref VPC
       Tags:
         - Key: Name
@@ -147,7 +147,7 @@ Resources:
     Properties:
       AvailabilityZone: !Sub "${AWS::Region}b"
       CidrBlock: !Ref NodeSubnet2Cidr
-      MapPublicIpOnLaunch: true
+      MapPublicIpOnLaunch: false
       VpcId: !Ref VPC
       Tags:
         - Key: Name
@@ -158,7 +158,7 @@ Resources:
     Properties:
       AvailabilityZone: !Sub "${AWS::Region}c"
       CidrBlock: !Ref NodeSubnet3Cidr
-      MapPublicIpOnLaunch: true
+      MapPublicIpOnLaunch: false
       VpcId: !Ref VPC
       Tags:
         - Key: Name

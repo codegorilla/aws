@@ -1,0 +1,179 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Production network advanced stack
+
+Resources:
+
+  S3VPCEndpoint:
+    Type: "AWS::EC2::VPCEndpoint"
+    Properties:
+      PrivateDnsEnabled: false
+      IpAddressType: "ipv4"
+      ServiceRegion: "us-east-2"
+      DnsOptions:
+        PrivateDnsOnlyForInboundResolverEndpoint: "NotSpecified"
+        PrivateDnsSpecifiedDomains:
+        - "*"
+        DnsRecordIpType: "service-defined"
+        PrivateDnsPreference: "VERIFIED_DOMAINS_ONLY"
+      ResourceConfigurationArn: ""
+      SecurityGroupIds: []
+      SubnetIds: []
+      ServiceNetworkArn: ""
+      VpcId: "vpc-x"
+      RouteTableIds:
+      - "rtb-0bb5c0076627c70e6"
+      ServiceName: "com.amazonaws.us-east-2.s3"
+      PolicyDocument:
+        Version: "2008-10-17"
+        Statement:
+        - Resource: "*"
+          Action: "*"
+          Effect: "Allow"
+          Principal: "*"
+      VpcEndpointType: "Gateway"
+      Tags:
+      - Value: "maxwell"
+        Key: "Creator"
+
+  # Create security group here. Need 443 inbound from prod network
+  # or at least node subnets.
+
+  EC2VPCEndpoint:
+    Type: "AWS::EC2::VPCEndpoint"
+    Properties:
+      PrivateDnsEnabled: true
+      IpAddressType: "ipv4"
+      ServiceRegion: "us-east-2"
+      DnsOptions:
+        PrivateDnsOnlyForInboundResolverEndpoint: "NotSpecified"
+        PrivateDnsSpecifiedDomains:
+        - "*"
+        DnsRecordIpType: "ipv4"
+        PrivateDnsPreference: "VERIFIED_DOMAINS_ONLY"
+      ResourceConfigurationArn: ""
+      SecurityGroupIds:
+      - "sg-x"
+      SubnetIds:
+      - "subnet-x"
+      - "subnet-y"
+      - "subnet-z"
+      ServiceNetworkArn: ""
+      VpcId: "vpc-x"
+      RouteTableIds: []
+      ServiceName: "com.amazonaws.us-east-2.ec2"
+      PolicyDocument:
+        Statement:
+        - Resource: "*"
+          Action: "*"
+          Effect: "Allow"
+          Principal: "*"
+      VpcEndpointType: "Interface"
+      Tags:
+      - Value: "maxwell"
+        Key: "Creator"
+
+  ElasticLoadBalancingVPCEndpoint:
+    Type: "AWS::EC2::VPCEndpoint"
+    Properties:
+      PrivateDnsEnabled: true
+      IpAddressType: "ipv4"
+      ServiceRegion: "us-east-2"
+      DnsOptions:
+        PrivateDnsOnlyForInboundResolverEndpoint: "NotSpecified"
+        PrivateDnsSpecifiedDomains:
+        - "*"
+        DnsRecordIpType: "ipv4"
+        PrivateDnsPreference: "VERIFIED_DOMAINS_ONLY"
+      ResourceConfigurationArn: ""
+      SecurityGroupIds:
+      - "sg-x"
+      SubnetIds:
+      - "subnet-x"
+      - "subnet-y"
+      - "subnet-z"
+      ServiceNetworkArn: ""
+      VpcId: "vpc-x"
+      RouteTableIds: []
+      ServiceName: "com.amazonaws.us-east-2.elasticloadbalancing"
+      PolicyDocument:
+        Statement:
+        - Resource: "*"
+          Action: "*"
+          Effect: "Allow"
+          Principal: "*"
+      VpcEndpointType: "Interface"
+      Tags:
+      - Value: "maxwell"
+        Key: "Creator"
+
+
+
+  ECRAPIVPCEndpoint:
+    Type: "AWS::EC2::VPCEndpoint"
+    Properties:
+      PrivateDnsEnabled: true
+      IpAddressType: "ipv4"
+      ServiceRegion: "us-east-2"
+      DnsOptions:
+        PrivateDnsOnlyForInboundResolverEndpoint: "NotSpecified"
+        PrivateDnsSpecifiedDomains:
+        - "*"
+        DnsRecordIpType: "ipv4"
+        PrivateDnsPreference: "VERIFIED_DOMAINS_ONLY"
+      ResourceConfigurationArn: ""
+      SecurityGroupIds:
+      - "sg-x"
+      SubnetIds:
+      - "subnet-x"
+      - "subnet-y"
+      - "subnet-z"
+      ServiceNetworkArn: ""
+      VpcId: "vpc-x"
+      RouteTableIds: []
+      ServiceName: "com.amazonaws.us-east-2.ecr.api"
+      PolicyDocument:
+        Statement:
+        - Resource: "*"
+          Action: "*"
+          Effect: "Allow"
+          Principal: "*"
+      VpcEndpointType: "Interface"
+      Tags:
+      - Value: "maxwell"
+        Key: "Creator"
+
+  ECRDKRVPCEndpoint:
+    Type: "AWS::EC2::VPCEndpoint"
+    Properties:
+      PrivateDnsEnabled: true
+      IpAddressType: "ipv4"
+      ServiceRegion: "us-east-2"
+      DnsOptions:
+        PrivateDnsOnlyForInboundResolverEndpoint: "NotSpecified"
+        PrivateDnsSpecifiedDomains:
+        - "*"
+        DnsRecordIpType: "ipv4"
+        PrivateDnsPreference: "VERIFIED_DOMAINS_ONLY"
+      ResourceConfigurationArn: ""
+      SecurityGroupIds:
+      - "sg-x"
+      SubnetIds:
+      - "subnet-x"
+      - "subnet-y"
+      - "subnet-z"
+      ServiceNetworkArn: ""
+      VpcId: "vpc-x"
+      RouteTableIds: []
+      ServiceName: "com.amazonaws.us-east-2.ecr.dkr"
+      PolicyDocument:
+        Statement:
+        - Resource: "*"
+          Action: "*"
+          Effect: "Allow"
+          Principal: "*"
+      VpcEndpointType: "Interface"
+      Tags:
+      - Value: "maxwell"
+        Key: "Creator"
+ 
+ # Also need an STS endpoint

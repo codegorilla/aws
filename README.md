@@ -383,6 +383,24 @@ Generate SSH key pair.
 $ ssh-keygen -t ed25519 -N '' -f ~/.ssh/id_rsa_rhcos
 ```
 
+> Note: For private clusters, we need to create ec2,
+> elasticloadbalancing, and s3 endpoints. Additioanlly, since we are
+> using ECR, we also need ecr.dkr and ecr.api endpoints.
+
+> Note: I found that because the cluster could not reach global IAM
+> endpoint, and there appears to be no VPC endpoint that you can
+> create for that, it seems that some kind of internet access is
+> required. This could be done with one or more NAT gateways I
+> assume, perhaps in an egress network VPC.
+
+> It is also conceivable that forward proxy could be used and a VPC
+> endpoint provided that points to that.
+
+> Another fix is to use short-term credentials, where instead of
+> trying to communicate with the IAM global endpoint, it will instead
+> communicate with the STS regional endpoint, for which a VPC
+> endpoint can be created.
+
 Create install-config.yaml file:
 
 > Note: You must create the file by hand. In a disconnected
@@ -559,6 +577,87 @@ $ cp cluster/auth/kubeconfig ~/.kube/config
 ```
 
 
+Troubleshooting
+---------------
+
+Some messages to watch for:
+
+> INFO Waiting up to 15m0s (until 6:01PM UTC) for network infrastructure to become ready...
+> INFO Network infrastructure is ready
+
+> INFO Waiting up to 15m0s (until 6:04PM UTC) for machines to provision...
+> INFO Control-plane machines are ready
+
+> INFO Waiting up to 20m0s (until 6:10PM UTC) for the Kubernetes API
+> INFO API up
+
+> INFO Waiting up to 45m0s (until 6:49PM UTC) for bootstrapping to complete...
+> INFO Waiting for the bootstrap etcd member to be removed...
+> INFO Bootstrap etcd member has been removed
+
+> INFO Waiting up to 5m0s for bootstrap machine deletion
+> INFO Finished destroying bootstrap resources
+
+> INFO Waiting up to 40m0s (until 7:01PM UTC) for the cluster to initialize...
+
+> INFO Waiting up to 30m0s (until 7:52PM UTC) to ensure each cluster operator has finished progressing...
+> INFO All cluster operators have completed progressing
+
+> INFO Install complete!
+
+SSH to bootstrap node.
+
+```bash
+$ ssh -i ~/.ssh/id_rsa_rhcos core@<bootstrap-ip-address>
+```
+
+Check node-image-pull service.
+
+```bash
+$ journalctl -b -f -u node-image-pull.service
+```
+
+Check release-image service.
+
+```bash
+$ journalctl -b -f -u release-image.service
+```
+
+Check bootkube service.
+
+```bash
+$ journalctl -b -f -u bootkube.service
+```
+
+Check podman. You should see a container running called "cluster-bootstrap".
+
+```bash
+$ sudo podman ps
+```
+
+Check CRI-O container runtime. You should see several control plane
+containers running.
+
+```bash
+$ sudo crictl ps
+```
+
+Check state of kubernetes nodes. You should see three master nodes.
+It may take time for them to become ready, but they should end up
+with a "Ready" status.
+
+```bash
+$ sudo oc get nodes --kubeconfig=/etc/kubernetes/kubeconfig
+```
+
+Check state of pods.
+
+```bash
+$ sudo oc get pods -A --kubeconfig=/etc/kubernetes/kubeconfig | grep -v Com | grep -v Run
+```
+
+
+
 
 Also, cannot fetch ignition. I think I need S3 gateway endpoint
 because it is not assigning public IPs to bootstrap node.
@@ -646,3 +745,9 @@ INFO Login to the console with user: "***", and password: "***"
 INFO Time elapsed: 12m2s
 ```
 
+- I need to create endpoints with CFn.
+
+- I need a security group for endpoints. Endpoint SGs do NOT need outbound rules.
+
+- I need to create NAT GW with CFn. Also need routes to NAT GW from
+  EC2 instances and from NAT GW to IGW. NAT GW needs to be in a public subnet.
