@@ -19,7 +19,7 @@ Resources:
   ReverseZone:
     Type: AWS::Route53::HostedZone
     Properties:
-      Name: "0.10.in-addr.arpa"
+      Name: "2.10.in-addr.arpa"
       HostedZoneConfig:
         Comment: "DNS reverse lookup zone"
       VPCs:

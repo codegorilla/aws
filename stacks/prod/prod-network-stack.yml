@@ -99,8 +99,8 @@ Resources:
       Tags:
         - Key: Name
           Value: "prod-lb-subnet-a"
-        - Key: kubernetes.io/cluster/unmanaged
-          Value: "true"
+        # - Key: kubernetes.io/cluster/unmanaged
+        #   Value: "true"
 
   LbSubnet2:
     Type: AWS::EC2::Subnet
@@ -112,8 +112,8 @@ Resources:
       Tags:
         - Key: Name
           Value: "prod-lb-subnet-b"
-        - Key: kubernetes.io/cluster/unmanaged
-          Value: "true"
+        # - Key: kubernetes.io/cluster/unmanaged
+        #   Value: "true"
 
   LbSubnet3:
     Type: AWS::EC2::Subnet
@@ -125,8 +125,8 @@ Resources:
       Tags:
         - Key: Name
           Value: "prod-lb-subnet-c"
-        - Key: kubernetes.io/cluster/unmanaged
-          Value: "true"
+        # - Key: kubernetes.io/cluster/unmanaged
+        #   Value: "true"
 
   # Unless we use a NAT gateway, we need to enable public IPs for the
   # node subnets.

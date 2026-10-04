@@ -393,8 +393,6 @@ Create install-config.yaml file:
 ---
 apiVersion: v1
 baseDomain: prod.saber.net
-metadata:
-  name: ocp
 compute:
   - architecture: amd64
     hyperthreading: Enabled
@@ -402,13 +400,14 @@ compute:
     platform:
       aws:
         type: m6i.large
-  replicas: 2
+    replicas: 2
 controlPlane:
   architecture: amd64
   hyperthreading: Enabled
   name: master
   platform: {}
   replicas: 3
+fips: false
 imageDigestSources:
   - mirrors:
       - 123456789123.dkr.ecr.us-east-2.amazonaws.com/openshift/release
@@ -416,6 +415,8 @@ imageDigestSources:
   - mirrors:
       - 123456789123.dkr.ecr.us-east-2.amazonaws.com/openshift/release-images
     source: quay.io/openshift-release-dev/ocp-release
+metadata:
+  name: ocp
 networking:
   clusterNetwork:
     - cidr: 10.128.0.0/16
@@ -426,12 +427,34 @@ platform:
   aws:
     hostedZone: Z0123456789ABCDEF
     ipFamily: IPv4
+    lbType: NLB
     region: us-east-2
     vpc:
       subnets:
         - id: subnet-1
+          roles:
+            - type: ControlPlaneInternalLB
+            - type: IngressControllerLB
         - id: subnet-2
+          roles:
+            - type: ControlPlaneInternalLB
+            - type: IngressControllerLB
         - id: subnet-3
+          roles:
+            - type: ControlPlaneInternalLB
+            - type: IngressControllerLB
+        - id: subnet-4
+          roles:
+            - type: BootstrapNode
+            - type: ClusterNode
+        - id: subnet-5
+          roles:
+            - type: BootstrapNode
+            - type: ClusterNode
+        - id: subnet-6
+          roles:
+            - type: BootstrapNode
+            - type: ClusterNode
 publish: Internal
 pullSecret: '{"auths":{"your-mirror-registry.io":{"auth":"..."}}}'
 sshKey: |
@@ -442,12 +465,19 @@ Fill in the SSH key field with your public SSH key.
 
 Fill in the pull secret field with new AWS ECR credentials.
 
+```bash
+$ aws ecr get-login-password --region us-east-2 | podman login --username AWS --password-stdin 123456789123.dkr.ecr.us-east-2.amazonaws.com
+$ cat $XDG_RUNTIME_DIR/containers/auth.json | jq -c > auth.json
+```
+
 Fill in the image digest sources.
 
 > FUTURE NOTE:
 > For more information, see "Manually creating long-term credentials" and
 > "Configuring an AWS cluster to use short-term credentials".
 
+> FUTURE NOTE:
+> Investigate custom service endpoints for FIPS mode.
 
 Amazon Root CA 1 is not really a root CA?
 
