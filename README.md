@@ -407,6 +407,12 @@ Create install-config.yaml file:
 > environment, the "openshift-install create cluster ..." command
 > will fail because it requires a public hosted zone to be defined.
 
+> Note: Do not use NLB for load balancer type, as it may cause
+> hairpinning issues. The default classic load balancer avoids that
+> issue. For more information, see Red Hat KB article 140321, titled
+> "AWS - hairpin connection failed when router is NLB with internal
+> scope" at https://access.redhat.com/solutions/7140321.
+
 ```yaml
 ---
 apiVersion: v1
@@ -445,7 +451,7 @@ platform:
   aws:
     hostedZone: Z0123456789ABCDEF
     ipFamily: IPv4
-    lbType: NLB
+    lbType: Classic
     region: us-east-2
     vpc:
       subnets:
@@ -575,6 +581,17 @@ Copy kubeconfig file to ~/.kube directory.
 ```bash
 $ cp cluster/auth/kubeconfig ~/.kube/config
 ```
+
+Disable all default sources in OperatorHub. This will terminate the
+OpenShift marketplace pods, which are crashing because they cannot
+reach the upstream OperatorHub on the internet.
+
+```bash
+$ oc patch operatorhub cluster \
+    --type json \
+    --patch '[{"op": "add", "path": "/spec/disableAllDefaultSources", "value": true}]'
+```
+
 
 
 Troubleshooting
@@ -751,3 +768,12 @@ INFO Time elapsed: 12m2s
 
 - I need to create NAT GW with CFn. Also need routes to NAT GW from
   EC2 instances and from NAT GW to IGW. NAT GW needs to be in a public subnet.
+
+
+error: Preparing import: Fetching manifest: failed to invoke method OpenImage: (Mirrors also failed:
+[164599051561.dkr.ecr.us-east-2.amazonaws.com/openshift/release@sha256:bcd64527187049ec104fc2c30b506ca1b02ae17c2d5d60a249d912f8c93daf96:
+getting username and password: illegal base64 data at input byte 2356]):
+quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:bcd64527187049ec104fc2c30b506ca1b02ae17c2d5d60a249d912f8c93daf96:
+reading manifest sha256:bcd64527187049ec104fc2c30b506ca1b02ae17c2d5d60a249d912f8c93daf96 in quay.io/openshift-release-dev/ocp-v4.0-art-dev:
+unauthorized: access to the requested resource is not authorized
+
