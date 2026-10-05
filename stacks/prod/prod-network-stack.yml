@@ -10,6 +10,10 @@ Parameters:
     Type: String
     Description: "CIDR block of management subnet"
     Default: 10.2.0.0/24
+  PublicSubnetCidr:
+    Type: String
+    Description: "CIDR block of public subnet"
+    Default: 10.2.1.0/24
   LbSubnet1Cidr:
     Type: String
     Description: "CIDR block of LB subnet in AZ A"
@@ -77,18 +81,19 @@ Resources:
         - Key: kubernetes.io/cluster/unmanaged
           Value: "true"
 
-  # The "kubernetes.io" tags allow EKS to perform automatic subnet
-  # discovery when using kubernetes services of type LoadBalancer.
-
-  # Might need to remove the kubernetes.io tags for an OCP IPI
-  # install. Per OCP install docs, it creates the tags.
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}a"
+      CidrBlock: !Ref PublicSubnetCidr
+      MapPublicIpOnLaunch: true
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "prod-public-subnet"
+        - Key: kubernetes.io/cluster/unmanaged
+          Value: "true"
   
-  # Also, OCP install docs, should only have one private subnet. Is
-  # this really true? What about TGW subnet? AI says that the docs
-  # are really referring to the install-config.yaml file. But it says
-  # that OCP will install LBs into the node subnets and it is up to
-  # you to change that as a "day 2" operation if you want.
-
   LbSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
@@ -209,6 +214,14 @@ Resources:
         - Key: Name
           Value: "prod-management-rtb"
 
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "prod-public-rtb"
+
   LbRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -238,6 +251,12 @@ Resources:
     Properties:
       SubnetId: !Ref ManagementSubnet
       RouteTableId: !Ref ManagementRouteTable
+
+  PublicSubnetAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet
+      RouteTableId: !Ref PublicRouteTable
 
   LbSubnet1Association:
     Type: AWS::EC2::SubnetRouteTableAssociation
@@ -346,6 +365,16 @@ Resources:
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref InternetGateway
 
+  # Provides public subnet with route to internet
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: GatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
 Outputs:
   VpcId:
     Description: "The ID of the VPC"
@@ -357,6 +386,11 @@ Outputs:
     Value: !Ref ManagementSubnet
     Export:
       Name: !Sub "${AWS::StackName}-ManagementSubnetId"
+  PublicSubnetId:
+    Description: "The ID of the public subnet"
+    Value: !Ref PublicSubnet
+    Export:
+      Name: !Sub "${AWS::StackName}-PublicSubnetId"
   LbSubnet1Id:
     Description: "The ID of the LB subnet in AZ A"
     Value: !Ref LbSubnet1
