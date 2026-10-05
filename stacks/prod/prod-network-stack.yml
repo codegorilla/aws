@@ -99,8 +99,6 @@ Resources:
       Tags:
         - Key: Name
           Value: "prod-lb-subnet-a"
-        # - Key: kubernetes.io/cluster/unmanaged
-        #   Value: "true"
 
   LbSubnet2:
     Type: AWS::EC2::Subnet
@@ -112,8 +110,6 @@ Resources:
       Tags:
         - Key: Name
           Value: "prod-lb-subnet-b"
-        # - Key: kubernetes.io/cluster/unmanaged
-        #   Value: "true"
 
   LbSubnet3:
     Type: AWS::EC2::Subnet
@@ -125,11 +121,6 @@ Resources:
       Tags:
         - Key: Name
           Value: "prod-lb-subnet-c"
-        # - Key: kubernetes.io/cluster/unmanaged
-        #   Value: "true"
-
-  # Unless we use a NAT gateway, we need to enable public IPs for the
-  # node subnets.
 
   NodeSubnet1:
     Type: AWS::EC2::Subnet
@@ -411,6 +402,16 @@ Outputs:
     Value: !Ref TgwSubnet3Cidr
     Export:
       Name: !Sub "${AWS::StackName}-TgwSubnet3Cidr"
+  VpcCidr:
+    Description: "CIDR block of VPC"
+    Value: !Ref VpcCidr
+    Export:
+      Name: !Sub "${AWS::StackName}-VpcCidr"
+  NodeRouteTableId:
+    Description: "The ID of the node route table"
+    Value: !Ref NodeRouteTable
+    Export:
+      Name: !Sub "${AWS::StackName}-NodeRouteTableId"
   ManagementInstanceConnectEndpointSecurityGroupId:
     Description: "ID of management instance connect endpoint security group"
     Value: !Ref ManagementInstanceConnectEndpointSecurityGroup
