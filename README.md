@@ -383,83 +383,6 @@ Generate SSH key pair.
 $ ssh-keygen -t ed25519 -N '' -f ~/.ssh/id_rsa_rhcos
 ```
 
-Configuring OCP Cluster to use Short-term Credentials
------------------------------------------------------
-
-Determine the release image for this particular OCP release.
-
-```bash
-$ RELEASE_IMAGE=$(openshift-install version | awk '/release image/ {print $3}')
-$ echo $RELEASE_IMAGE
-quay.io/openshift-release-dev/ocp-release@sha256:fed788ea...
-```
-
-Extract the list of credentials request objects for this particular
-OCP release.
-
-```bash
-$ oc adm release extract \
-  --from=$RELEASE_IMAGE \
-  --credentials-requests \
-  --included \
-  --install-config=install-config.yaml \
-  --to=creds-requests
-```
-
-Process all credentials request objects extracted above.
-
-```bash
-$ ccoctl aws create-all \
-  --name=saber-prod \
-  --region=us-east-2 \
-  --credentials-requests-dir=creds-requests \
-  --output-dir=output
-```
-
-The above command will create an OpenID Connect identity provider and
-an associated public S3 bucket. It will also create IAM roles in
-accordance with the credentials requests objects obtained previously,
-such as the following:
-
-  * openshift-cloud-credential-operator-cloud-credentials
-  * openshift-cloud-network-config-controller-cloud-credentials
-  * openshift-cluster-csi-drivers-ebs-cloud-credentials
-  * openshift-image-registry-installer-cloud-credentials
-  * openshift-ingress-operator-cloud-credentials
-  * openshift-machine-api-aws-cloud-credentials
-
-> Note: The public S3 bucket does not contain any particularly
-> sensitive information. It contians a "keys.json" file, which is
-> just a standard JWKS file, having only a public key inside.
-> However, a public bucket may violate blanket security policies. In
-> this case, there may be a way to use a private bucket, a pair of
-> VPC endpoints ("sts-oidc" interface and "s3" gateway endpoints) to
-> meet the requirements. To force creation of a private bucket, use
-> "--create-private-s3-bucket" with the "ccoctl aws create-all"
-> command.
-
-Create OCP manifests.
-
-```bash
-$ openshift-install create manifests --dir=./cluster
-```
-
-Copy CCOCTL manifests.
-
-```bash
-$ cp /<path_to_ccoctl_output_dir>/manifests/* ./manifests/
-```
-
-Copy CCOCTL TLS directory.
-
-```bash
-$ cp -a /<path_to_ccoctl_output_dir>/tls .
-```
-
-Now it is time to install cluster.
-
-
-
 > Note: For private clusters, we need to create ec2,
 > elasticloadbalancing, and s3 endpoints. Additionally, since we are
 > using ECR, we also need ecr.dkr and ecr.api endpoints.
@@ -574,69 +497,98 @@ $ cat $XDG_RUNTIME_DIR/containers/auth.json | jq -c > auth.json
 
 Fill in the image digest sources.
 
-> FUTURE NOTE:
-> For more information, see "Manually creating long-term credentials" and
-> "Configuring an AWS cluster to use short-term credentials".
+Create a working directory.
 
-> FUTURE NOTE:
-> Investigate custom service endpoints for FIPS mode.
+```bash
+$ mkdir cluster
+```
 
-Amazon Root CA 1 is not really a root CA?
+Copy OpenShift install config file into working directory.
 
------BEGIN CERTIFICATE-----
-MIIEkjCCA3qgAwIBAgITBn+USionzfP6wq4rAfkI7rnExjANBgkqhkiG9w0BAQsF
-ADCBmDELMAkGA1UEBhMCVVMxEDAOBgNVBAgTB0FyaXpvbmExEzARBgNVBAcTClNj
-b3R0c2RhbGUxJTAjBgNVBAoTHFN0YXJmaWVsZCBUZWNobm9sb2dpZXMsIEluYy4x
-OzA5BgNVBAMTMlN0YXJmaWVsZCBTZXJ2aWNlcyBSb290IENlcnRpZmljYXRlIEF1
-dGhvcml0eSAtIEcyMB4XDTE1MDUyNTEyMDAwMFoXDTM3MTIzMTAxMDAwMFowOTEL
-MAkGA1UEBhMCVVMxDzANBgNVBAoTBkFtYXpvbjEZMBcGA1UEAxMQQW1hem9uIFJv
-b3QgQ0EgMTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALJ4gHHKeNXj
-ca9HgFB0fW7Y14h29Jlo91ghYPl0hAEvrAIthtOgQ3pOsqTQNroBvo3bSMgHFzZM
-9O6II8c+6zf1tRn4SWiw3te5djgdYZ6k/oI2peVKVuRF4fn9tBb6dNqcmzU5L/qw
-IFAGbHrQgLKm+a/sRxmPUDgH3KKHOVj4utWp+UhnMJbulHheb4mjUcAwhmahRWa6
-VOujw5H5SNz/0egwLX0tdHA114gk957EWW67c4cX8jJGKLhD+rcdqsq08p8kDi1L
-93FcXmn/6pUCyziKrlA4b9v7LWIbxcceVOF34GfID5yHI9Y/QCB/IIDEgEw+OyQm
-jgSubJrIqg0CAwEAAaOCATEwggEtMA8GA1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/
-BAQDAgGGMB0GA1UdDgQWBBSEGMyFNOy8DJSULghZnMeyEE4KCDAfBgNVHSMEGDAW
-gBScXwDfqgHXMCs4iKK4bUqc8hGRgzB4BggrBgEFBQcBAQRsMGowLgYIKwYBBQUH
-MAGGImh0dHA6Ly9vY3NwLnJvb3RnMi5hbWF6b250cnVzdC5jb20wOAYIKwYBBQUH
-MAKGLGh0dHA6Ly9jcnQucm9vdGcyLmFtYXpvbnRydXN0LmNvbS9yb290ZzIuY2Vy
-MD0GA1UdHwQ2MDQwMqAwoC6GLGh0dHA6Ly9jcmwucm9vdGcyLmFtYXpvbnRydXN0
-LmNvbS9yb290ZzIuY3JsMBEGA1UdIAQKMAgwBgYEVR0gADANBgkqhkiG9w0BAQsF
-AAOCAQEAYjdCXLwQtT6LLOkMm2xF4gcAevnFWAu5CIw+7bMlPLVvUOTNNWqnkzSW
-MiGpSESrnO09tKpzbeR/FoCJbM8oAxiDR3mjEH4wW6w7sGDgd9QIpuEdfF7Au/ma
-eyKdpwAJfqxGF4PcnCZXmTA5YpaP7dreqsXMGz7KQ2hsVxa81Q4gLv7/wmpdLqBK
-bRRYh5TmOTFffHPLkIhqhBGWJ6bt2YFGpn6jcgAKUj6DiAdjd4lpFw85hdKrCEVN
-0FE6/V1dN2RMfjCyVSRCnTawXZwXgWHxyvkQAiSr6w10kY17RSlQOYiypok1JR4U
-akcjMS9cmvqtmg5iUaQqqcT5NJ0hGA==
------END CERTIFICATE-----
+> Warning: Make sure you copy instead of moving the file because it
+> will get consumed when processed.
 
------BEGIN CERTIFICATE-----
-MIIDQTCCAimgAwIBAgITBmyfz5m/jAo54vB4ikPmljZbyjANBgkqhkiG9w0BAQsF
-ADA5MQswCQYDVQQGEwJVUzEPMA0GA1UEChMGQW1hem9uMRkwFwYDVQQDExBBbWF6
-b24gUm9vdCBDQSAxMB4XDTE1MDUyNjAwMDAwMFoXDTM4MDExNzAwMDAwMFowOTEL
-MAkGA1UEBhMCVVMxDzANBgNVBAoTBkFtYXpvbjEZMBcGA1UEAxMQQW1hem9uIFJv
-b3QgQ0EgMTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALJ4gHHKeNXj
-ca9HgFB0fW7Y14h29Jlo91ghYPl0hAEvrAIthtOgQ3pOsqTQNroBvo3bSMgHFzZM
-9O6II8c+6zf1tRn4SWiw3te5djgdYZ6k/oI2peVKVuRF4fn9tBb6dNqcmzU5L/qw
-IFAGbHrQgLKm+a/sRxmPUDgH3KKHOVj4utWp+UhnMJbulHheb4mjUcAwhmahRWa6
-VOujw5H5SNz/0egwLX0tdHA114gk957EWW67c4cX8jJGKLhD+rcdqsq08p8kDi1L
-93FcXmn/6pUCyziKrlA4b9v7LWIbxcceVOF34GfID5yHI9Y/QCB/IIDEgEw+OyQm
-jgSubJrIqg0CAwEAAaNCMEAwDwYDVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMC
-AYYwHQYDVR0OBBYEFIQYzIU07LwMlJQuCFmcx7IQTgoIMA0GCSqGSIb3DQEBCwUA
-A4IBAQCY8jdaQZChGsV2USggNiMOruYou6r4lK5IpDB/G/wkjUu0yKGX9rbxenDI
-U5PMCCjjmCXPI6T53iHTfIUJrU6adTrCC2qJeHZERxhlbI1Bjjt/msv0tadQ1wUs
-N+gDS63pYaACbvXy8MWy7Vu33PqUXHeeE6V/Uq2V8viTO96LXFvKWlJbYK8U90vv
-o/ufQJVtMVT8QtPHRh8jrdkPSHCa2XV4cdFyQzR1bldZwgJcJmApzyMZFo6IQ6XU
-5MsI+yMRQ+hDKXJioaldXgjUkK642M4UwtBV8ob2xJNDd2ZhwLnoQdeXeGADbkpy
-rqXRfboQnoZsG4q5WTP468SQvvG5
------END CERTIFICATE-----
+```bash
+$ cp install-config.yaml cluster
+```
 
+Create OpenShift install manifests.
+
+```bash
+$ openshift-install create manifests --dir=cluster
+```
+
+Configuring OCP Cluster to use Short-term Credentials
+-----------------------------------------------------
+
+Determine the release image for this particular OCP release.
+
+```bash
+$ RELEASE_IMAGE=$(openshift-install version | awk '/release image/ {print $3}')
+$ echo $RELEASE_IMAGE
+quay.io/openshift-release-dev/ocp-release@sha256:fed788ea...
+```
+
+Extract the list of credentials request objects for this particular
+OCP release.
+
+```bash
+$ oc adm release extract \
+  --from=$RELEASE_IMAGE \
+  --credentials-requests \
+  --included \
+  --install-config=install-config.yaml \
+  --to=creds-requests
+```
+
+Process all credentials request objects extracted above.
+
+```bash
+$ ccoctl aws create-all \
+  --name=saber-prod \
+  --region=us-east-2 \
+  --credentials-requests-dir=creds-requests \
+  --output-dir=output
+```
+
+The above command will create an OpenID Connect identity provider and
+an associated public S3 bucket. It will also create IAM roles in
+accordance with the credentials requests objects obtained previously,
+such as the following:
+
+  * openshift-cloud-credential-operator-cloud-credentials
+  * openshift-cloud-network-config-controller-cloud-credentials
+  * openshift-cluster-csi-drivers-ebs-cloud-credentials
+  * openshift-image-registry-installer-cloud-credentials
+  * openshift-ingress-operator-cloud-credentials
+  * openshift-machine-api-aws-cloud-credentials
+
+> Note: The public S3 bucket does not contain any particularly
+> sensitive information. It contians a "keys.json" file, which is
+> just a standard JWKS file, having only a public key inside.
+> However, a public bucket may violate blanket security policies. In
+> this case, there may be a way to use a private bucket, a pair of
+> VPC endpoints ("sts-oidc" interface and "s3" gateway endpoints) to
+> meet the requirements. To force creation of a private bucket, use
+> "--create-private-s3-bucket" with the "ccoctl aws create-all"
+> command.
+
+Copy CCOCTL manifests.
+
+```bash
+$ cp output/manifests/* cluster/manifests
+```
+
+Copy CCOCTL TLS directory.
+
+```bash
+$ cp -a output/tls cluster
+```
 
 Create the cluster.
 
 ```bash
-$ openshift-install create cluster --dir=./cluster --log-level=info
+$ openshift-install create cluster --dir=cluster --log-level=info
 ```
 
 If you are interrupted, use the following command.
@@ -664,13 +616,16 @@ Disable all default sources in OperatorHub. This will terminate the
 OpenShift marketplace pods, which are crashing because they cannot
 reach the upstream OperatorHub on the internet.
 
+> Note: Since we are having to generate manifests, this could
+> theoretically be done during OCP install preparations by including
+> a manifest for it. It is something to look into in the future, but
+> not a big deal.
+
 ```bash
 $ oc patch operatorhub cluster \
     --type json \
     --patch '[{"op": "add", "path": "/spec/disableAllDefaultSources", "value": true}]'
 ```
-
-
 
 Troubleshooting
 ---------------
@@ -751,30 +706,10 @@ Check state of pods.
 $ sudo oc get pods -A --kubeconfig=/etc/kubernetes/kubeconfig | grep -v Com | grep -v Run
 ```
 
-
-
-
-Also, cannot fetch ignition. I think I need S3 gateway endpoint
-because it is not assigning public IPs to bootstrap node.
-
-The S3 gateway endpoint definitely helped, but I think I need the EC2 ones.
-
-Another thing I could do is manually turn on auto-assign public IP and see if that helps.
-That DID seem to help.
-
-Ran out of vCPU quota and had to request an increase from 16 to 20.
+Check state of nodes on management host.
 
 ```bash
-$ oc get machines -n openshift-machine-api
-```
-
-Two machines were failed because there was not enough vCPU in our
-quota. Increased quota from 16 to 20. Deleted failed machines, which
-triggered new ones appearing.
-
-
-```bash
-$ oc get no
+$ oc get nodes
 NAME                                        STATUS   ROLES                  AGE   VERSION
 ip-10-2-20-250.us-east-2.compute.internal   Ready    control-plane,master   71m   v1.35.6
 ip-10-2-21-249.us-east-2.compute.internal   Ready    control-plane,master   70m   v1.35.6
@@ -783,12 +718,16 @@ ip-10-2-22-137.us-east-2.compute.internal   Ready    worker                 14m 
 ip-10-2-22-210.us-east-2.compute.internal   Ready    control-plane,master   71m   v1.35.6
 ```
 
+Check state of machine config pools on management host.
+
 ```bash
 $ oc get mcp
 NAME     CONFIG                                             UPDATED   UPDATING   DEGRADED   MACHINECOUNT   READYMACHINECOUNT   UPDATEDMACHINECOUNT   DEGRADEDMACHINECOUNT   AGE
 master   rendered-master-b97e1de21e909175d3759f87dcfcee88   True      False      False      3              3                   3                     0                      69m
 worker   rendered-worker-1ae974bb5c94643c71556de35edc5017   True      False      False      2              2                   2                     0                      69m
 ```
+
+Check state of cluster operators on management host.
 
 ```bash
 $ oc get co
@@ -842,16 +781,78 @@ INFO Time elapsed: 12m2s
 
 - I need to create endpoints with CFn.
 
-- I need a security group for endpoints. Endpoint SGs do NOT need outbound rules.
+- I need a security group for endpoints. Needs to allow tcp/443
+inbound any OCP node subnets.
 
 - I need to create NAT GW with CFn. Also need routes to NAT GW from
-  EC2 instances and from NAT GW to IGW. NAT GW needs to be in a public subnet.
+  EC2 instances and from NAT GW to IGW. NAT GW needs to be in a
+  public subnet.
 
 
-error: Preparing import: Fetching manifest: failed to invoke method OpenImage: (Mirrors also failed:
-[164599051561.dkr.ecr.us-east-2.amazonaws.com/openshift/release@sha256:bcd64527187049ec104fc2c30b506ca1b02ae17c2d5d60a249d912f8c93daf96:
-getting username and password: illegal base64 data at input byte 2356]):
-quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:bcd64527187049ec104fc2c30b506ca1b02ae17c2d5d60a249d912f8c93daf96:
-reading manifest sha256:bcd64527187049ec104fc2c30b506ca1b02ae17c2d5d60a249d912f8c93daf96 in quay.io/openshift-release-dev/ocp-v4.0-art-dev:
-unauthorized: access to the requested resource is not authorized
+Notes
+-----
 
+Ran out of vCPU quota and had to request an increase from 16 to 20.
+
+```bash
+$ oc get machines -n openshift-machine-api
+```
+
+Two machines were failed because there was not enough vCPU in our
+quota. Increased quota from 16 to 20. Deleted failed machines, which
+triggered new ones appearing.
+
+
+Amazon Root CA 1 is not really a root CA?
+
+-----BEGIN CERTIFICATE-----
+MIIEkjCCA3qgAwIBAgITBn+USionzfP6wq4rAfkI7rnExjANBgkqhkiG9w0BAQsF
+ADCBmDELMAkGA1UEBhMCVVMxEDAOBgNVBAgTB0FyaXpvbmExEzARBgNVBAcTClNj
+b3R0c2RhbGUxJTAjBgNVBAoTHFN0YXJmaWVsZCBUZWNobm9sb2dpZXMsIEluYy4x
+OzA5BgNVBAMTMlN0YXJmaWVsZCBTZXJ2aWNlcyBSb290IENlcnRpZmljYXRlIEF1
+dGhvcml0eSAtIEcyMB4XDTE1MDUyNTEyMDAwMFoXDTM3MTIzMTAxMDAwMFowOTEL
+MAkGA1UEBhMCVVMxDzANBgNVBAoTBkFtYXpvbjEZMBcGA1UEAxMQQW1hem9uIFJv
+b3QgQ0EgMTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALJ4gHHKeNXj
+ca9HgFB0fW7Y14h29Jlo91ghYPl0hAEvrAIthtOgQ3pOsqTQNroBvo3bSMgHFzZM
+9O6II8c+6zf1tRn4SWiw3te5djgdYZ6k/oI2peVKVuRF4fn9tBb6dNqcmzU5L/qw
+IFAGbHrQgLKm+a/sRxmPUDgH3KKHOVj4utWp+UhnMJbulHheb4mjUcAwhmahRWa6
+VOujw5H5SNz/0egwLX0tdHA114gk957EWW67c4cX8jJGKLhD+rcdqsq08p8kDi1L
+93FcXmn/6pUCyziKrlA4b9v7LWIbxcceVOF34GfID5yHI9Y/QCB/IIDEgEw+OyQm
+jgSubJrIqg0CAwEAAaOCATEwggEtMA8GA1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/
+BAQDAgGGMB0GA1UdDgQWBBSEGMyFNOy8DJSULghZnMeyEE4KCDAfBgNVHSMEGDAW
+gBScXwDfqgHXMCs4iKK4bUqc8hGRgzB4BggrBgEFBQcBAQRsMGowLgYIKwYBBQUH
+MAGGImh0dHA6Ly9vY3NwLnJvb3RnMi5hbWF6b250cnVzdC5jb20wOAYIKwYBBQUH
+MAKGLGh0dHA6Ly9jcnQucm9vdGcyLmFtYXpvbnRydXN0LmNvbS9yb290ZzIuY2Vy
+MD0GA1UdHwQ2MDQwMqAwoC6GLGh0dHA6Ly9jcmwucm9vdGcyLmFtYXpvbnRydXN0
+LmNvbS9yb290ZzIuY3JsMBEGA1UdIAQKMAgwBgYEVR0gADANBgkqhkiG9w0BAQsF
+AAOCAQEAYjdCXLwQtT6LLOkMm2xF4gcAevnFWAu5CIw+7bMlPLVvUOTNNWqnkzSW
+MiGpSESrnO09tKpzbeR/FoCJbM8oAxiDR3mjEH4wW6w7sGDgd9QIpuEdfF7Au/ma
+eyKdpwAJfqxGF4PcnCZXmTA5YpaP7dreqsXMGz7KQ2hsVxa81Q4gLv7/wmpdLqBK
+bRRYh5TmOTFffHPLkIhqhBGWJ6bt2YFGpn6jcgAKUj6DiAdjd4lpFw85hdKrCEVN
+0FE6/V1dN2RMfjCyVSRCnTawXZwXgWHxyvkQAiSr6w10kY17RSlQOYiypok1JR4U
+akcjMS9cmvqtmg5iUaQqqcT5NJ0hGA==
+-----END CERTIFICATE-----
+
+-----BEGIN CERTIFICATE-----
+MIIDQTCCAimgAwIBAgITBmyfz5m/jAo54vB4ikPmljZbyjANBgkqhkiG9w0BAQsF
+ADA5MQswCQYDVQQGEwJVUzEPMA0GA1UEChMGQW1hem9uMRkwFwYDVQQDExBBbWF6
+b24gUm9vdCBDQSAxMB4XDTE1MDUyNjAwMDAwMFoXDTM4MDExNzAwMDAwMFowOTEL
+MAkGA1UEBhMCVVMxDzANBgNVBAoTBkFtYXpvbjEZMBcGA1UEAxMQQW1hem9uIFJv
+b3QgQ0EgMTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALJ4gHHKeNXj
+ca9HgFB0fW7Y14h29Jlo91ghYPl0hAEvrAIthtOgQ3pOsqTQNroBvo3bSMgHFzZM
+9O6II8c+6zf1tRn4SWiw3te5djgdYZ6k/oI2peVKVuRF4fn9tBb6dNqcmzU5L/qw
+IFAGbHrQgLKm+a/sRxmPUDgH3KKHOVj4utWp+UhnMJbulHheb4mjUcAwhmahRWa6
+VOujw5H5SNz/0egwLX0tdHA114gk957EWW67c4cX8jJGKLhD+rcdqsq08p8kDi1L
+93FcXmn/6pUCyziKrlA4b9v7LWIbxcceVOF34GfID5yHI9Y/QCB/IIDEgEw+OyQm
+jgSubJrIqg0CAwEAAaNCMEAwDwYDVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMC
+AYYwHQYDVR0OBBYEFIQYzIU07LwMlJQuCFmcx7IQTgoIMA0GCSqGSIb3DQEBCwUA
+A4IBAQCY8jdaQZChGsV2USggNiMOruYou6r4lK5IpDB/G/wkjUu0yKGX9rbxenDI
+U5PMCCjjmCXPI6T53iHTfIUJrU6adTrCC2qJeHZERxhlbI1Bjjt/msv0tadQ1wUs
+N+gDS63pYaACbvXy8MWy7Vu33PqUXHeeE6V/Uq2V8viTO96LXFvKWlJbYK8U90vv
+o/ufQJVtMVT8QtPHRh8jrdkPSHCa2XV4cdFyQzR1bldZwgJcJmApzyMZFo6IQ6XU
+5MsI+yMRQ+hDKXJioaldXgjUkK642M4UwtBV8ob2xJNDd2ZhwLnoQdeXeGADbkpy
+rqXRfboQnoZsG4q5WTP468SQvvG5
+-----END CERTIFICATE-----
+
+> FUTURE NOTE:
+> Investigate custom service endpoints for FIPS mode.
