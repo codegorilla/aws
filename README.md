@@ -383,8 +383,85 @@ Generate SSH key pair.
 $ ssh-keygen -t ed25519 -N '' -f ~/.ssh/id_rsa_rhcos
 ```
 
+Configuring OCP Cluster to use Short-term Credentials
+-----------------------------------------------------
+
+Determine the release image for this particular OCP release.
+
+```bash
+$ RELEASE_IMAGE=$(openshift-install version | awk '/release image/ {print $3}')
+$ echo $RELEASE_IMAGE
+quay.io/openshift-release-dev/ocp-release@sha256:fed788ea...
+```
+
+Extract the list of credentials request objects for this particular
+OCP release.
+
+```bash
+$ oc adm release extract \
+  --from=$RELEASE_IMAGE \
+  --credentials-requests \
+  --included \
+  --install-config=install-config.yaml \
+  --to=creds-requests
+```
+
+Process all credentials request objects extracted above.
+
+```bash
+$ ccoctl aws create-all \
+  --name=saber-prod \
+  --region=us-east-2 \
+  --credentials-requests-dir=creds-requests \
+  --output-dir=output
+```
+
+The above command will create an OpenID Connect identity provider and
+an associated public S3 bucket. It will also create IAM roles in
+accordance with the credentials requests objects obtained previously,
+such as the following:
+
+  * openshift-cloud-credential-operator-cloud-credentials
+  * openshift-cloud-network-config-controller-cloud-credentials
+  * openshift-cluster-csi-drivers-ebs-cloud-credentials
+  * openshift-image-registry-installer-cloud-credentials
+  * openshift-ingress-operator-cloud-credentials
+  * openshift-machine-api-aws-cloud-credentials
+
+> Note: The public S3 bucket does not contain any particularly
+> sensitive information. It contians a "keys.json" file, which is
+> just a standard JWKS file, having only a public key inside.
+> However, a public bucket may violate blanket security policies. In
+> this case, there may be a way to use a private bucket, a pair of
+> VPC endpoints ("sts-oidc" interface and "s3" gateway endpoints) to
+> meet the requirements. To force creation of a private bucket, use
+> "--create-private-s3-bucket" with the "ccoctl aws create-all"
+> command.
+
+Create OCP manifests.
+
+```bash
+$ openshift-install create manifests --dir=./cluster
+```
+
+Copy CCOCTL manifests.
+
+```bash
+$ cp /<path_to_ccoctl_output_dir>/manifests/* ./manifests/
+```
+
+Copy CCOCTL TLS directory.
+
+```bash
+$ cp -a /<path_to_ccoctl_output_dir>/tls .
+```
+
+Now it is time to install cluster.
+
+
+
 > Note: For private clusters, we need to create ec2,
-> elasticloadbalancing, and s3 endpoints. Additioanlly, since we are
+> elasticloadbalancing, and s3 endpoints. Additionally, since we are
 > using ECR, we also need ecr.dkr and ecr.api endpoints.
 
 > Note: I found that because the cluster could not reach global IAM
@@ -431,6 +508,7 @@ controlPlane:
   name: master
   platform: {}
   replicas: 3
+credentialsMode: Manual
 fips: false
 imageDigestSources:
   - mirrors:
