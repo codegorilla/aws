@@ -63,10 +63,11 @@ Resources:
           Value: "prod-vpc"
 
   # The management subnet is a special subnet used to hold an EC2
-  # instance that can be used to manage the cluster.
-
-  # Temporarily map use public IP so it can reach internet to
-  # download ec2 instance connect packages.
+  # instance that can be used to manage the cluster. If we wish to
+  # use EC2 Instance Connect (not supported in all regions) to
+  # connect to the server, then we must map a public IP so it can
+  # reach the internet to download EC2 Instance Connect (EIC)
+  # packages.
 
   ManagementSubnet:
     Type: AWS::EC2::Subnet

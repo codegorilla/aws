@@ -856,3 +856,153 @@ rqXRfboQnoZsG4q5WTP468SQvvG5
 
 > FUTURE NOTE:
 > Investigate custom service endpoints for FIPS mode.
+
+
+"if [ ! -d \"$HOME\" ]; then mkdir -p \"$HOME\" && chown $(whoami):$(whoami) \"$HOME\"; fi; cd \"$HOME\" && exec /bin/bash"
+
+
+
+set +x +v
+REAL_USER=$(whoami)
+if [ -n "${REAL_USER}" ] && [ "${REAL_USER}" != "root" ] && [ "${REAL_USER}" != "ssm-user" ]; then
+    exec su -l "${REAL_USER}"
+fi
+clear
+
+- AmazonEC2ContainerRegistryFullAccess
+- AmazonS3FullAccess
+- AmazonSSMManagedInstanceCore
+- prod-ocp-management-s3-policy
+
+
+
+{
+  "auths": {
+    "cloud.openshift.com": {
+      "auth": "b3BlbnNoaWZ0LXJlbGVhc2UtZGV2K29jbV9hY2Nlc3NfNTQ1YmNlNzA3ZGM4NGQ1Y2EzZDI2OTg3ODczYWI3OWY6Q0hWVEMxSDgzVU5CWjQ2OEVPNzM1OFBMVzZYS0NEMUpQQU42UkJNOEtSNURLSlMyNVlRSkxTRFcxN0pBWUw0MQ==",
+      "email": "moron451-ocptest@yahoo.com"
+    },
+    "quay.io": {
+      "auth": "b3BlbnNoaWZ0LXJlbGVhc2UtZGV2K29jbV9hY2Nlc3NfNTQ1YmNlNzA3ZGM4NGQ1Y2EzZDI2OTg3ODczYWI3OWY6Q0hWVEMxSDgzVU5CWjQ2OEVPNzM1OFBMVzZYS0NEMUpQQU42UkJNOEtSNURLSlMyNVlRSkxTRFcxN0pBWUw0MQ==",
+      "email": "moron451-ocptest@yahoo.com"
+    },
+    "registry.connect.redhat.com": {
+      "auth": "fHVoYy1wb29sLTFhODQ5N2IyLTZkNjQtNGNhMy04ZDQxLTc4M2Y0MWM0ZTFhOTpleUpoYkdjaU9pSlNVelV4TWlKOS5leUp6ZFdJaU9pSXdPV1F5WVRCa05qTTNPREEwWm1FMk9UTTNORFk0TjJRMVlqQmlPR05sTXlKOS51TDJpMzNUdGlSdHkxS010VWJSYUZDM2tZQVRkdmlxSXdXQnJNdEgzSlpnd0k0akxjMDZhYnM2YmN4Uy1hRUllT0h6N3lGU091SHM2TF9kMUxlVkNCcTU2Yk1uMWtBOXNXZ1JzQ3V4Q1VDTjZCeVdEMS1qRWtsZndMVkUzTENWaUZwMElXSlZRMmpwdi1iTngzLUpjYU9YSG9GcXltU1dnM2pwNi01NHBpazFEZnVmOTRxeHdrY0J3aXVJQ2Rvdk1FS19VTVV1ckN4YmhsMzlzUTE0bmJGczdTeDBxZDVIU0cxRUREUFJjQ1FSYkdFbTRKYWxuMjEzRjdPYkpoRTg5SUpER0o3T1BSOGE1NE9BZkk1RF8zcU9ybkVRYnUxUDloX3daWjhxbWNTV1R0WHJPeDB1Q1VobENZV213ME5aTmRZamE5QTdwS0VOTzZiV2NJNzNjUlpGVWN4bzM5dTVjUWROT2JhNmtFZGo5RGhNY1VYaFM4Ml9aNUozdks1WTF1MUZkYTV5MHM0V19PMHhzb0pjZW5wQ1Z2b1RpTDktR3JqRmpSM3BwRjRVWW5Bd2VGamp3TzJ0LWRMaGpIZzFvSThhN2FmRU5CNTdlcjNrd3VMQTk5U21LMW0wdy04aXpqOUJxQVdhQzBmeDB0OVR3MEcyd2pucDZYX2g5WkNEaWdHeF9QMkZmWVpQUFBjTmcxQXo0WTEzQTBZSEhHdENXeUFLWnN6NnFXd2RFTVNrR3BKUmJuQUN4T3ZLanVac0tfdGV5NUhjY25nY3gzZmdENjRUakFXMl8xTGNkblhrTGNNSVYybjNKaUxySVNuR2RRdHdIMWY1X2hMc1FVb19ZOUNMMENzT2l4QlZNYllaalJUMHI5cEZManAzd2tuR1JLN0hMWGdXcFpSYw==",
+      "email": "moron451-ocptest@yahoo.com"
+    },
+    "registry.redhat.io": {
+      "auth": "fHVoYy1wb29sLTFhODQ5N2IyLTZkNjQtNGNhMy04ZDQxLTc4M2Y0MWM0ZTFhOTpleUpoYkdjaU9pSlNVelV4TWlKOS5leUp6ZFdJaU9pSXdPV1F5WVRCa05qTTNPREEwWm1FMk9UTTNORFk0TjJRMVlqQmlPR05sTXlKOS51TDJpMzNUdGlSdHkxS010VWJSYUZDM2tZQVRkdmlxSXdXQnJNdEgzSlpnd0k0akxjMDZhYnM2YmN4Uy1hRUllT0h6N3lGU091SHM2TF9kMUxlVkNCcTU2Yk1uMWtBOXNXZ1JzQ3V4Q1VDTjZCeVdEMS1qRWtsZndMVkUzTENWaUZwMElXSlZRMmpwdi1iTngzLUpjYU9YSG9GcXltU1dnM2pwNi01NHBpazFEZnVmOTRxeHdrY0J3aXVJQ2Rvdk1FS19VTVV1ckN4YmhsMzlzUTE0bmJGczdTeDBxZDVIU0cxRUREUFJjQ1FSYkdFbTRKYWxuMjEzRjdPYkpoRTg5SUpER0o3T1BSOGE1NE9BZkk1RF8zcU9ybkVRYnUxUDloX3daWjhxbWNTV1R0WHJPeDB1Q1VobENZV213ME5aTmRZamE5QTdwS0VOTzZiV2NJNzNjUlpGVWN4bzM5dTVjUWROT2JhNmtFZGo5RGhNY1VYaFM4Ml9aNUozdks1WTF1MUZkYTV5MHM0V19PMHhzb0pjZW5wQ1Z2b1RpTDktR3JqRmpSM3BwRjRVWW5Bd2VGamp3TzJ0LWRMaGpIZzFvSThhN2FmRU5CNTdlcjNrd3VMQTk5U21LMW0wdy04aXpqOUJxQVdhQzBmeDB0OVR3MEcyd2pucDZYX2g5WkNEaWdHeF9QMkZmWVpQUFBjTmcxQXo0WTEzQTBZSEhHdENXeUFLWnN6NnFXd2RFTVNrR3BKUmJuQUN4T3ZLanVac0tfdGV5NUhjY25nY3gzZmdENjRUakFXMl8xTGNkblhrTGNNSVYybjNKaUxySVNuR2RRdHdIMWY1X2hMc1FVb19ZOUNMMENzT2l4QlZNYllaalJUMHI5cEZManAzd2tuR1JLN0hMWGdXcFpSYw==",
+      "email": "moron451-ocptest@yahoo.com"
+    }
+  }
+}
+
+downloads/
+awscliv2.zip
+ccoctl-linux.tar.tar
+oc-mirror-rhel9-linux-amd64.tar
+openshift-client-linux-amd64-rhel9.tar.tar
+openshift-install-linux.tar.tar
+pull-secret.json
+
+oc-mirror/
+
+
+---
+
+kind: ImageSetConfiguration
+apiVersion: mirror.openshift.io/v2alpha1
+mirror:
+  operators:
+    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.22
+      packages:
+        - name: aws-load-balancer-operator
+          channels:
+            - name: stable-v1
+
+---
+
+kind: ImageSetConfiguration
+apiVersion: mirror.openshift.io/v2alpha1
+mirror:
+  platform:
+    channels:
+      - name: stable-4.22
+        minVersion: 4.22.15
+        maxVersion: 4.22.15
+    graph: true
+
+
+
+---
+
+apiVersion: v1
+baseDomain: prod.saber.net
+compute:
+  - architecture: amd64
+    hyperthreading: Enabled
+    name: worker
+    platform:
+      aws:
+        type: m6i.large
+    replicas: 2
+controlPlane:
+  architecture: amd64
+  hyperthreading: Enabled
+  name: master
+  platform: {}
+  replicas: 3
+credentialsMode: Manual
+fips: false
+imageDigestSources:
+  - mirrors:
+      - 164599051561.dkr.ecr.us-east-2.amazonaws.com/openshift/release
+    source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
+  - mirrors:
+      - 164599051561.dkr.ecr.us-east-2.amazonaws.com/openshift/release-images
+    source: quay.io/openshift-release-dev/ocp-release
+metadata:
+  name: ocp
+networking:
+  clusterNetwork:
+    - cidr: 10.128.0.0/16
+      hostPrefix: 24
+  machineNetwork:
+    - cidr: 10.2.0.0/16
+platform:
+  aws:
+    hostedZone: Z04517413RA802KGOYJYM
+    ipFamily: IPv4
+    lbType: Classic
+    region: us-east-2
+    vpc:
+      subnets:
+        - id: subnet-019f6ffaed36c982f
+          roles:
+            - type: ControlPlaneInternalLB
+            - type: IngressControllerLB
+        - id: subnet-0ff8411da627a87d2
+          roles:
+            - type: ControlPlaneInternalLB
+            - type: IngressControllerLB
+        - id: subnet-0eadeba49707252ed
+          roles:
+            - type: ControlPlaneInternalLB
+            - type: IngressControllerLB
+        - id: subnet-0bdc300df7e08ac1c
+          roles:
+            - type: BootstrapNode
+            - type: ClusterNode
+        - id: subnet-0e9f0891ca2a16f47
+          roles:
+            - type: BootstrapNode
+            - type: ClusterNode
+        - id: subnet-063f0f4fa92e932b5
+          roles:
+            - type: BootstrapNode
+            - type: ClusterNode
+publish: Internal
+pullSecret: '{"auths":{"164599051561.dkr.ecr.us-east-2.amazonaws.com":{"auth":"QVdTOmV5SndZWGxzYjJGa0lqb2ljVXB4YzBNNFpWRmpjREpqZGpsRlJtSlRTbE5HY0ZwcE1XZE9ORmRXU2pReGQzTlJiU3MyUTB3elRVbEtMMGRrWlVodWVuVlpTVk5PT0d3M2EwMVRXbXRQYVcxaWJpOWxVREkyVHpaR2FYRlNMMkkxTWtoMGVHVmpSV2xRUm5saWMwdzJSRkZyYVV4cWNGSjFTVEJSYlc5SlFYSndVMmxrUkc5MlNsQldVMGxCZGtWR1dIcEZhbTVyS3poaFpXZE9kVFZVYTJzMlVXdzFZVkZRUzFoYVkxSmxUbHBpY2psRFdHWlJURkZVTWpWcmRYaHBhQ3RwTjNGdGVIa3hMMDFFTldoeE0wbFpRVTFHTm1jeGRrMUhSVFZNVVVaRmNYVTRMMjlpV2tGemFVTXJUak5EZWtSdWJXcHdNQ3QzVlhkbWMycHhTM1YzV25Oa2NUZGtNelJZWTI5Mk1ETjNZa1F4VjNRdlRYRk9jRzVQY0VwUE0zaDRZelZUZEVGQmJuZDZlRFozT1VOVmVpOVBVMUZaUm5wc1JHTm5USEJEUml0Q2NXbE1VR3BNUzNsT2RYUkpXbXRuVGtwclZIZEJSMVl5ZURSSmQwWmlOVGxKWkdaVWVrTlFTRmc0Wm0xemQyZEdSMnR0ZEROQlkzZHBNVll6V2taNlFXaENZbkJhZEV0MVlUWnpLMlpWVFV4bk5GTlNlbXQ0UkRaQlpraFlWMHh5YW1VMWQzbEVSQ3QzTUdwVlRtcHJTelZKZEhOeFlXdG1lbTlrVUdWdU5tMVhjQzloVjBSaE9YUXdaSE5FU0hWNlFsaHpNV2RvVld4RVRsTXJSR1I0VkVobWVsZHdkMmRyVjI1QmEzZEVVa2N6TW10dVNDOVNibG81TmtWd1dsWXlZbGsyZW5sdlVsRjNNR1Z4UjFoUWJFaFVRazltTm1nM016QkVZak42TWxkUmQwZGxPV0V2UWpOMVNFSjVNVmswUzBKQ0wxTmlOMmRyUlRBd2VTdFNlVTUxU1ROQ1EzbENkMjFzY1ZFNUx5OVFRMVJ5TTJrdmRVNTZkblJVVTNWaFRuRlJUMWRDUkZwVVNWTkNOVEExYXpaUmVDc3ZRM0ZKVFhKQ2VsZzJWV1ExVjJ0Nk1teFdha2x6ZWk5TWFHcERXVEpMUlhKT2QwNDNaRFExTm5sTFJYcFRSSFpWV0NzelRrNXJSMUJsUkdwMmNVVklVMGcwT1daSFdqSlVUVzh5V1c1T2QxaDZhVlZSZUZWVFdGbHpabFpIZGpWUmNtcExkMDk0V1dwWFJFcHlZMjF3UTNoeGExVmtaMWR0THpKTlZYWXJLM2hGVjNCMFRIRm1TSFpqYVVsSmNXOHlTMjlTU1doWWIzWmFVRFJKY2t0SlRsTlhXRGhuTUZGek5sVmhPVWx6TXpkb1dWTmFOMjFRU2tkSFZXeElOM3BOVTNOdVNpOVphMHByTWxkU1RtMTVTbEV5VVZaWFVrZzRNbEZEUXpoUWR5ODJaMGRMYkdGMVdsZFhNMFJDWVN0Tk1rRTNWMjFuTms5dGVXWkhNWEZWUVVNelltTnJabTFwWkd0amNEWXljVXBVVVZJeGJqbG1OMmxxZUU5eFZteHBNRlJWYkhJMlJ6SnVPRnBHTDNGUFJrTXpVSFZqYUdzMVVHTmtkRXRyVmpOQ2VEaEhSM1pwVUhSS0wyRTJabkpPTmxGaWFqVmxWMFpTTkhGVlJEbDJWbFJWVUhkVk5tSlhTa1IxUW5CNWRVWjVSakZYVlhsMlEwZFViamMyUVRWTmRuQm1MMWhtYjNCUVFuTk1XR2xaSWl3aVpHRjBZV3RsZVNJNklrRlJSVUpCU0dwQ055OXBaM2ROWnpST1VIZGhkWEo0VTBsWmVEUklabTU0ZFVkakx6UTRZa1IzZG5kRWNFNVpWMXBuUVVGQlNEUjNaa0ZaU2t0dldrbG9kbU5PUVZGalIyOUhPSGRpVVVsQ1FVUkNiMEpuYTNGb2EybEhPWGN3UWtKM1JYZElaMWxLV1VsYVNVRlhWVVJDUVVWMVRVSkZSVVJDV1VOVE9IaE9UVEJ2U1VwWkwyNWFkMGxDUlVsQk56RlNkaXRvUm00eFdrWXZZbms0U0VwbVRVWlVaRkpYWkN0MFQwd3lOMFIyYjI1eGJHeHZWbUV3TVU5UVNGRTBZVUZ3ZVVkUmFIUXJiV05XZDJoMGNXcFVTM3BoWmpkdVFYVmxWWFIwVm04OUlpd2lkbVZ5YzJsdmJpSTZJaklpTENKMGVYQmxJam9pUkVGVVFWOUxSVmtpTENKbGVIQnBjbUYwYVc5dUlqb3hOemt4TXpNMk5UQTBmUT09"}}}' 
+sshKey: |
+  ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOvLZiEZakFIg82pM8itouRfchSZyQa47g6zR8CwDNFo ec2-user@ip-10-2-0-90.us-east-2.compute.internal
+  

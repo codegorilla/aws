@@ -42,8 +42,9 @@ Resources:
               - sts:AssumeRole
       ManagedPolicyArns:
         - !Ref ManagedPolicy
-        - arn:aws:iam::aws:policy/AmazonS3FullAccess
         - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+        # - arn:aws:iam::aws:policy/AmazonS3FullAccess
 
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
