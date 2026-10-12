@@ -1,43 +1,51 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Shared services stack
+Description: Shared services network stack
 
 Parameters:
   VpcCidr:
     Type: String
     Description: "CIDR block of VPC"
-    Default: 10.0.2.0/24
+    Default: 10.1.0.0/16
+  ManagementSubnetCidr:
+    Type: String
+    Description: "CIDR block of management subnet"
+    Default: 10.1.1.0/24
+  PublicSubnetCidr:
+    Type: String
+    Description: "CIDR block of public subnet"
+    Default: 10.1.2.0/24
   IngressSubnet1Cidr:
     Type: String
     Description: "CIDR block of ingress subnet in AZ A"
-    Default: 10.0.2.0/27
+    Default: 10.1.10.0/24
   IngressSubnet2Cidr:
     Type: String
     Description: "CIDR block of ingress subnet in AZ B"
-    Default: 10.0.2.32/27
+    Default: 10.1.11.0/24
   AppSubnet1Cidr:
     Type: String
     Description: "CIDR block of app subnet in AZ A"
-    Default: 10.0.2.64/27
+    Default: 10.1.20.0/24
   AppSubnet2Cidr:
     Type: String
     Description: "CIDR block of app subnet in AZ B"
-    Default: 10.0.2.96/27
+    Default: 10.1.21.0/24
   DataSubnet1Cidr:
     Type: String
     Description: "CIDR block of data subnet in AZ A"
-    Default: 10.0.2.128/27
+    Default: 10.1.30.0/24
   DataSubnet2Cidr:
     Type: String
     Description: "CIDR block of data subnet in AZ B"
-    Default: 10.0.2.160/27
+    Default: 10.1.31.0/24
   TgwSubnet1Cidr:
     Type: String
     Description: "CIDR block of TGW subnet in AZ A"
-    Default: 10.0.2.224/28
+    Default: 10.1.40.0/24
   TgwSubnet2Cidr:
     Type: String
     Description: "CIDR block of TGW subnet in AZ B"
-    Default: 10.0.2.240/28
+    Default: 10.1.41.0/24
 
 Resources:
   VPC:
@@ -49,6 +57,28 @@ Resources:
       Tags:
         - Key: Name
           Value: "shared-services-vpc"
+
+  ManagementSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}a"
+      CidrBlock: !Ref ManagementSubnetCidr
+      MapPublicIpOnLaunch: true
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "shared-services-management-subnet"
+
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}a"
+      CidrBlock: !Ref PublicSubnetCidr
+      MapPublicIpOnLaunch: true
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "shared-services-public-subnet"
 
   IngressSubnet1:
     Type: AWS::EC2::Subnet
@@ -141,6 +171,22 @@ Resources:
   # Create custom route tables and explicitly associate subnets to
   # override the default route table.
 
+  ManagementRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "shared-services-management-rtb"
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "shared-services-public-rtb"
+
   IngressRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -172,6 +218,18 @@ Resources:
       Tags:
         - Key: Name
           Value: "shared-services-tgw-rtb"
+
+  ManagementSubnetAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref ManagementSubnet
+      RouteTableId: !Ref ManagementRouteTable
+
+  PublicSubnetAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet
+      RouteTableId: !Ref PublicRouteTable
 
   IngressSubnet1Association:
     Type: AWS::EC2::SubnetRouteTableAssociation
@@ -221,6 +279,30 @@ Resources:
       SubnetId: !Ref TgwSubnet2
       RouteTableId: !Ref TgwRouteTable
 
+  InstanceConnectEndpointSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Instance connect endpoint security group
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+          Description: Allow all outbound traffic to anywhere
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "shared-services-instance-connect-endpoint-sg"
+
+  InstanceConnectEndpoint:
+    Type: AWS::EC2::InstanceConnectEndpoint
+    Properties:
+      PreserveClientIp: false
+      SecurityGroupIds:
+        - !Ref InstanceConnectEndpointSecurityGroup
+      SubnetId: !Ref ManagementSubnet
+      Tags:
+        - Key: Name
+          Value: shared-services-eice
+
   InternetGateway:
     Type: AWS::EC2::InternetGateway
     Properties:
@@ -234,13 +316,13 @@ Resources:
       VpcId: !Ref VPC
       InternetGatewayId: !Ref InternetGateway
 
-  # Actually this should be to TGW subnet
+  # Provides public subnet with route to internet
 
-  TgwRoute:
+  PublicRoute:
     Type: AWS::EC2::Route
     DependsOn: GatewayAttachment
     Properties:
-      RouteTableId: !Ref TgwRouteTable
+      RouteTableId: !Ref PublicRouteTable
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref InternetGateway
 
@@ -250,6 +332,16 @@ Outputs:
     Value: !Ref VPC
     Export:
       Name: !Sub "${AWS::StackName}-VpcId"
+  ManagementSubnetId:
+    Description: "The ID of the management subnet"
+    Value: !Ref ManagementSubnet
+    Export:
+      Name: !Sub "${AWS::StackName}-ManagementSubnetId"
+  PublicSubnetId:
+    Description: "The ID of the public subnet"
+    Value: !Ref PublicSubnet
+    Export:
+      Name: !Sub "${AWS::StackName}-PublicSubnetId"
   IngressSubnet1Id:
     Description: "The ID of the ingress subnet in AZ A"
     Value: !Ref IngressSubnet1
@@ -290,4 +382,21 @@ Outputs:
     Value: !Ref TgwSubnet2Cidr
     Export:
       Name: !Sub "${AWS::StackName}-TgwSubnet2Cidr"
+
+  # Not sure if these are needed, just copied them over from prod
+  # VpcCidr:
+  #   Description: "CIDR block of VPC"
+  #   Value: !Ref VpcCidr
+  #   Export:
+  #     Name: !Sub "${AWS::StackName}-VpcCidr"
+  # AppRouteTableId:
+  #   Description: "The ID of the app route table"
+  #   Value: !Ref AppRouteTable
+  #   Export:
+  #     Name: !Sub "${AWS::StackName}-AppRouteTableId"
+  # InstanceConnectEndpointSecurityGroupId:
+  #   Description: "ID of instance connect endpoint security group"
+  #   Value: !Ref InstanceConnectEndpointSecurityGroup
+  #   Export:
+  #     Name: !Sub "${AWS::StackName}-InstanceConnectEndpointSecurityGroupId"
 

@@ -9,7 +9,7 @@ Description: Production OCP management server stack
 Parameters:
   AmiId:
     Type: AWS::EC2::Image::Id
-    Description: "ID of AMI to use for OCP Management server instance"
+    Description: "ID of AMI to use for OCP Management Server instance"
     Default: ami-0b77fd0a4e70d9ca6
 
 Resources:
@@ -17,7 +17,7 @@ Resources:
   SecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Development EKS Manager security group
+      GroupDescription: Production OCP Management Server security group
       VpcId: !ImportValue prod-network-stack-VpcId
       SecurityGroupIngress:
         - IpProtocol: tcp
@@ -32,13 +32,10 @@ Resources:
         - Key: Name
           Value: "prod-ocp-management-server-sg"
 
-  # We should use RHEL 9.8 AMI. Normally, do not associate a public IP
-  # in CFn. Instead, do it manually whenever required to avoid costs
-  # associated with a public IP. However, it might be needed in order
-  # to download things when user data script is being run.
+  # Normally, we do not associate a public IP in CFn. However, it is
+  # needed for instances in a public subnet in order to reach the
+  # internet.
 
-  # Note: SSM quick setup is probably not required since we are using
-  # EC2 Instance Connect instead of SSM Session Manager.
 
   # Note: Key pair is omitted because we are using EC2 Instance
   # Connect instead of traditional SSH logins.
@@ -96,7 +93,7 @@ Resources:
   #   Type: AWS::Route53::RecordSet
   #   Properties:
   #     HostedZoneId: !ImportValue dns-stack-ForwardZoneId
-  #     Name: "eks-manager.dev.saber.net"
+  #     Name: "ocp-mgmt.dev.saber.net"
   #     Type: A
   #     TTL: 300
   #     ResourceRecords:
@@ -115,11 +112,11 @@ Resources:
   #     Type: PTR
   #     TTL: 300
   #     ResourceRecords:
-  #       - "eks-manager.dev.saber.net"
+  #       - "ocp-mgmt.dev.saber.net"
 
 Outputs:
   SecurityGroupId:
-    Description: "ID of OCP Management server security group"
+    Description: "ID of OCP Management Server security group"
     Value: !Ref SecurityGroup
     Export:
       Name: !Sub "${AWS::StackName}-SecurityGroupId"

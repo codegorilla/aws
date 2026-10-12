@@ -26,6 +26,10 @@ Resources:
             Resource:
               - arn:aws:s3:::saber-ocp-artifacts/*
 
+  # Note: AmazonSSMManagedInstanceCore policy is probably not
+  # required since we are using EC2 Instance Connect instead of SSM
+  # Session Manager.
+
   Role:
     Type: AWS::IAM::Role
     Properties:
@@ -43,8 +47,8 @@ Resources:
       ManagedPolicyArns:
         - !Ref ManagedPolicy
         - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess
-        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
-        # - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        #- arn:aws:iam::aws:policy/AmazonS3FullAccess
+        #- arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
 
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
