@@ -1,0 +1,32 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Inspection network advanced stack
+
+Resources:
+
+
+  # Build load balancer here
+
+
+  NATEIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+
+  # For now, put NAT gateway in ingress subnet, but we might break
+  # them out into a separate egress subnet later.
+
+  NATGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NATEIP.AllocationId
+      SubnetId: !ImportValue inspection-network-stack-IngressSubnetId
+      Tags:
+        - Key: Name
+          Value: inspection-nat-gateway
+
+  ProxyRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !ImportValue inspection-network-stack-ProxyRouteTableId
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NATGateway

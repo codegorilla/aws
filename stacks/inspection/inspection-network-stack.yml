@@ -46,22 +46,6 @@ Resources:
         - Key: Name
           Value: "inspection-vpc"
 
-  # Not sure that we really need a management subnet for this VPC
-
-  ManagementSubnet:
-    Type: AWS::EC2::Subnet
-    Properties:
-      AvailabilityZone: !Sub "${AWS::Region}a"
-      CidrBlock: !Ref ManagementSubnetCidr
-      MapPublicIpOnLaunch: true
-      VpcId: !Ref VPC
-      Tags:
-        - Key: Name
-          Value: "inspection-management-subnet"
-
-  # The ingress subnet is for NLB to NGINX if desired. However, to
-  # reduce cost, we can make proxy subnets public instead.
-
   IngressSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
@@ -84,14 +68,12 @@ Resources:
         - Key: Name
           Value: "inspection-ingress-subnet-b"
 
-  # To reduce cost, we will make the proxy subnets public.
-
   ProxySubnet1:
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: !Sub "${AWS::Region}a"
       CidrBlock: !Ref ProxySubnet1Cidr
-      MapPublicIpOnLaunch: true
+      MapPublicIpOnLaunch: false
       VpcId: !Ref VPC
       Tags:
         - Key: Name
@@ -102,7 +84,7 @@ Resources:
     Properties:
       AvailabilityZone: !Sub "${AWS::Region}b"
       CidrBlock: !Ref ProxySubnet2Cidr
-      MapPublicIpOnLaunch: true
+      MapPublicIpOnLaunch: false
       VpcId: !Ref VPC
       Tags:
         - Key: Name
@@ -133,14 +115,6 @@ Resources:
   # Create custom route tables and explicitly associate subnets to
   # override the default route table.
 
-  ManagementRouteTable:
-    Type: AWS::EC2::RouteTable
-    Properties:
-      VpcId: !Ref VPC
-      Tags:
-        - Key: Name
-          Value: "inspection-management-rtb"
-
   IngressRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -164,12 +138,6 @@ Resources:
       Tags:
         - Key: Name
           Value: "inspection-tgw-rtb"
-
-  ManagementSubnetAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      SubnetId: !Ref ManagementSubnet
-      RouteTableId: !Ref ManagementRouteTable
 
   IngressSubnet1Association:
     Type: AWS::EC2::SubnetRouteTableAssociation
@@ -248,13 +216,11 @@ Resources:
       VpcId: !Ref VPC
       InternetGatewayId: !Ref InternetGateway
 
-  # We are hooking the proxy up directly to the internet.
-
-  ProxyRoute:
+  IngressRoute:
     Type: AWS::EC2::Route
     DependsOn: GatewayAttachment
     Properties:
-      RouteTableId: !Ref ProxyRouteTable
+      RouteTableId: !Ref IngressRouteTable
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref InternetGateway
 
@@ -264,11 +230,6 @@ Outputs:
     Value: !Ref VPC
     Export:
       Name: !Sub "${AWS::StackName}-VpcId"
-  ManagementSubnetId:
-    Description: "The ID of the management subnet"
-    Value: !Ref ManagementSubnet
-    Export:
-      Name: !Sub "${AWS::StackName}-ManagementSubnetId"
   IngressSubnet1Id:
     Description: "The ID of the ingress subnet in AZ A"
     Value: !Ref IngressSubnet1
@@ -290,9 +251,7 @@ Outputs:
     Export:
       Name: !Sub "${AWS::StackName}-ProxySubnet2Id"
 
-
-
-
+  # Not sure these are needed
 
   IngressSubnet1Cidr:
     Description: "CIDR block of ingress subnet in AZ A"
