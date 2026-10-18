@@ -250,6 +250,12 @@ Outputs:
     Value: !Ref ProxySubnet2
     Export:
       Name: !Sub "${AWS::StackName}-ProxySubnet2Id"
+  VpcCidr:
+    Description: "CIDR block of VPC"
+    Value: !Ref VpcCidr
+    Export:
+      Name: !Sub "${AWS::StackName}-VpcCidr"
+
 
   # Not sure these are needed
 
