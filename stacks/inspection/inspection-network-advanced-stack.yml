@@ -3,8 +3,23 @@ Description: Inspection network advanced stack
 
 Resources:
 
-
   # Build load balancer here
+
+  Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+  Properties:
+    IpAddressType: ipv4
+    # LoadBalancerAttributes: 
+    #   - LoadBalancerAttribute
+    Name: inspection-ingress-nlb
+    SecurityGroups: 
+      - String
+    SubnetMappings: 
+      - SubnetMapping
+    Subnets: 
+      - String
+    Tags: 
+      - Tag
+    Type: String
 
 
   NATEIP:
