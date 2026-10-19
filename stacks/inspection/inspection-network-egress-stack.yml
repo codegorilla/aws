@@ -1,0 +1,27 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Inspection network egress stack
+
+Resources:
+
+  NATEIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+
+  # Only provision NAT gateway in one AZ to reduce cost
+
+  NATGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NATEIP.AllocationId
+      SubnetId: !ImportValue inspection-network-stack-PublicSubnet1Id
+      Tags:
+        - Key: Name
+          Value: inspection-nat-gateway
+
+  PrivateRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !ImportValue inspection-network-stack-PrivateRouteTableId
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NATGateway

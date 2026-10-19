@@ -175,8 +175,6 @@ Resources:
       SubnetId: !Ref TgwSubnet2
       RouteTableId: !Ref TgwRouteTable
 
-  # Can a SG have no inbound rules?
-
   InstanceConnectEndpointSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -255,7 +253,16 @@ Outputs:
     Value: !Ref VpcCidr
     Export:
       Name: !Sub "${AWS::StackName}-VpcCidr"
-
+  PrivateRouteTableId:
+    Description: "The ID of the private route table"
+    Value: !Ref PrivateRouteTable
+    Export:
+      Name: !Sub "${AWS::StackName}-PrivateRouteTableId"
+  InstanceConnectEndpointSecurityGroupId:
+    Description: "ID of instance connect endpoint security group"
+    Value: !Ref InstanceConnectEndpointSecurityGroup
+    Export:
+      Name: !Sub "${AWS::StackName}-InstanceConnectEndpointSecurityGroupId"
 
   # Not sure these are needed
 

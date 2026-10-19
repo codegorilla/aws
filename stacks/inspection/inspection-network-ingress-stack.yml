@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: Inspection network advanced stack
+Description: Inspection network ingress stack
 
 Resources:
 

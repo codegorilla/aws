@@ -6,6 +6,9 @@ Description: Inspection proxy stack
 
 # RHEL-9.8.0_HVM-20260908-x86_64-0-Hourly2-GP3
 
+# No export named inspection-network-stack-InstanceConnectEndpointSecurityGroupId
+# found. Rollback requested by user.
+
 Parameters:
   AmiId:
     Type: AWS::EC2::Image::Id
@@ -45,7 +48,7 @@ Resources:
           DeviceIndex: 0
           GroupSet:
             - !Ref SecurityGroup
-          SubnetId: !ImportValue inspection-network-stack-ProxySubnet1Id
+          SubnetId: !ImportValue inspection-network-stack-PrivateSubnet1Id
       BlockDeviceMappings:
         - DeviceName: "/dev/sda1"
           Ebs:
@@ -76,9 +79,7 @@ Resources:
           #sudo ./aws/install
       Tags:
         - Key: Name
-          Value: "prod-ocp-management-server-instance"
-
-
+          Value: "inspection-proxy-instance"
 
   # ForwardRecord:
   #   Type: AWS::Route53::RecordSet
@@ -107,7 +108,7 @@ Resources:
 
 Outputs:
   SecurityGroupId:
-    Description: "ID of OCP Management Server security group"
+    Description: "ID of inspection proxy security group"
     Value: !Ref SecurityGroup
     Export:
       Name: !Sub "${AWS::StackName}-SecurityGroupId"
