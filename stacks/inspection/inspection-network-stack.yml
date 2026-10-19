@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Inspection (firewall) stack
+Description: Inspection stack
 
 Parameters:
   VpcCidr:
@@ -10,21 +10,21 @@ Parameters:
     Type: String
     Description: "CIDR block of management subnet"
     Default: 10.0.0.0/24
-  IngressSubnet1Cidr:
+  PublicSubnet1Cidr:
     Type: String
-    Description: "CIDR block of ingress subnet in AZ A"
+    Description: "CIDR block of public subnet in AZ A"
     Default: 10.0.10.0/24
-  IngressSubnet2Cidr:
+  PublicSubnet2Cidr:
     Type: String
-    Description: "CIDR block of ingress subnet in AZ B"
+    Description: "CIDR block of public subnet in AZ B"
     Default: 10.0.11.0/24
-  ProxySubnet1Cidr:
+  PrivateSubnet1Cidr:
     Type: String
-    Description: "CIDR block of proxy subnet in AZ A"
+    Description: "CIDR block of private subnet in AZ A"
     Default: 10.0.20.0/24
-  ProxySubnet2Cidr:
+  PrivateSubnet2Cidr:
     Type: String
-    Description: "CIDR block of proxy subnet in AZ B"
+    Description: "CIDR block of private subnet in AZ B"
     Default: 10.0.21.0/24
   TgwSubnet1Cidr:
     Type: String
@@ -46,49 +46,49 @@ Resources:
         - Key: Name
           Value: "inspection-vpc"
 
-  IngressSubnet1:
+  PublicSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: !Sub "${AWS::Region}a"
-      CidrBlock: !Ref IngressSubnet1Cidr
+      CidrBlock: !Ref PublicSubnet1Cidr
       MapPublicIpOnLaunch: false
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "inspection-ingress-subnet-a"
+          Value: "inspection-public-subnet-a"
 
-  IngressSubnet2:
+  PublicSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: !Sub "${AWS::Region}b"
-      CidrBlock: !Ref IngressSubnet2Cidr
+      CidrBlock: !Ref PublicSubnet2Cidr
       MapPublicIpOnLaunch: false
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "inspection-ingress-subnet-b"
+          Value: "inspection-public-subnet-b"
 
-  ProxySubnet1:
+  PrivateSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: !Sub "${AWS::Region}a"
-      CidrBlock: !Ref ProxySubnet1Cidr
+      CidrBlock: !Ref PrivateSubnet1Cidr
       MapPublicIpOnLaunch: false
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "inspection-proxy-subnet-a"
+          Value: "inspection-private-subnet-a"
 
-  ProxySubnet2:
+  PrivateSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: !Sub "${AWS::Region}b"
-      CidrBlock: !Ref ProxySubnet2Cidr
+      CidrBlock: !Ref PrivateSubnet2Cidr
       MapPublicIpOnLaunch: false
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "inspection-proxy-subnet-b"
+          Value: "inspection-private-subnet-b"
 
   TgwSubnet1:
     Type: AWS::EC2::Subnet
@@ -115,21 +115,21 @@ Resources:
   # Create custom route tables and explicitly associate subnets to
   # override the default route table.
 
-  IngressRouteTable:
+  PublicRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "inspection-ingress-rtb"
+          Value: "inspection-public-rtb"
 
-  ProxyRouteTable:
+  PrivateRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "inspection-proxy-rtb"
+          Value: "inspection-private-rtb"
 
   TgwRouteTable:
     Type: AWS::EC2::RouteTable
@@ -139,29 +139,29 @@ Resources:
         - Key: Name
           Value: "inspection-tgw-rtb"
 
-  IngressSubnet1Association:
+  PublicSubnet1Association:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      SubnetId: !Ref IngressSubnet1
-      RouteTableId: !Ref IngressRouteTable
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicRouteTable
 
-  IngressSubnet2Association:
+  PublicSubnet2Association:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      SubnetId: !Ref IngressSubnet2
-      RouteTableId: !Ref IngressRouteTable
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref PublicRouteTable
 
-  ProxySubnet1Association:
+  PrivateSubnet1Association:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      SubnetId: !Ref ProxySubnet1
-      RouteTableId: !Ref ProxyRouteTable
+      SubnetId: !Ref PrivateSubnet1
+      RouteTableId: !Ref PrivateRouteTable
 
-  ProxySubnet2Association:
+  PrivateSubnet2Association:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      SubnetId: !Ref ProxySubnet2
-      RouteTableId: !Ref ProxyRouteTable
+      SubnetId: !Ref PrivateSubnet2
+      RouteTableId: !Ref PrivateRouteTable
 
   TgwSubnet1Association:
     Type: AWS::EC2::SubnetRouteTableAssociation
@@ -185,7 +185,7 @@ Resources:
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
-          CidrIp: !Sub VpcCidr
+          CidrIp: !Ref VpcCidr
           Description: Allow SSH to hosts within VPC
       VpcId: !Ref VPC
       Tags:
@@ -198,7 +198,7 @@ Resources:
       PreserveClientIp: false
       SecurityGroupIds:
         - !Ref InstanceConnectEndpointSecurityGroup
-      SubnetId: !Ref ProxySubnet1
+      SubnetId: !Ref PrivateSubnet1
       Tags:
         - Key: Name
           Value: inspection-eice
@@ -216,11 +216,11 @@ Resources:
       VpcId: !Ref VPC
       InternetGatewayId: !Ref InternetGateway
 
-  IngressRoute:
+  PublicRoute:
     Type: AWS::EC2::Route
     DependsOn: GatewayAttachment
     Properties:
-      RouteTableId: !Ref IngressRouteTable
+      RouteTableId: !Ref PublicRouteTable
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref InternetGateway
 
@@ -230,26 +230,26 @@ Outputs:
     Value: !Ref VPC
     Export:
       Name: !Sub "${AWS::StackName}-VpcId"
-  IngressSubnet1Id:
-    Description: "The ID of the ingress subnet in AZ A"
-    Value: !Ref IngressSubnet1
+  PublicSubnet1Id:
+    Description: "The ID of the public subnet in AZ A"
+    Value: !Ref PublicSubnet1
     Export:
-      Name: !Sub "${AWS::StackName}-IngressSubnet1Id"
-  IngressSubnet2Id:
-    Description: "The ID of the ingress subnet in AZ B"
-    Value: !Ref IngressSubnet2
+      Name: !Sub "${AWS::StackName}-PublicSubnet1Id"
+  PublicSubnet2Id:
+    Description: "The ID of the public subnet in AZ B"
+    Value: !Ref PublicSubnet2
     Export:
-      Name: !Sub "${AWS::StackName}-IngressSubnet2Id"
-  ProxySubnet1Id:
-    Description: "The ID of the proxy subnet in AZ A"
-    Value: !Ref ProxySubnet1
+      Name: !Sub "${AWS::StackName}-PublicSubnet2Id"
+  PrivateSubnet1Id:
+    Description: "The ID of the private subnet in AZ A"
+    Value: !Ref PrivateSubnet1
     Export:
-      Name: !Sub "${AWS::StackName}-ProxySubnet1Id"
-  ProxySubnet2Id:
-    Description: "The ID of the proxy subnet in AZ B"
-    Value: !Ref ProxySubnet2
+      Name: !Sub "${AWS::StackName}-PrivateSubnet1Id"
+  PrivateSubnet2Id:
+    Description: "The ID of the private subnet in AZ B"
+    Value: !Ref PrivateSubnet2
     Export:
-      Name: !Sub "${AWS::StackName}-ProxySubnet2Id"
+      Name: !Sub "${AWS::StackName}-PrivateSubnet2Id"
   VpcCidr:
     Description: "CIDR block of VPC"
     Value: !Ref VpcCidr
@@ -259,26 +259,26 @@ Outputs:
 
   # Not sure these are needed
 
-  IngressSubnet1Cidr:
-    Description: "CIDR block of ingress subnet in AZ A"
-    Value: !Ref IngressSubnet1Cidr
+  PublicSubnet1Cidr:
+    Description: "CIDR block of public subnet in AZ A"
+    Value: !Ref PublicSubnet1Cidr
     Export:
-      Name: !Sub "${AWS::StackName}-IngressSubnet1Cidr"
-  IngressSubnet2Cidr:
-    Description: "CIDR block of ingress subnet in AZ B"
-    Value: !Ref IngressSubnet2Cidr
+      Name: !Sub "${AWS::StackName}-PublicSubnet1Cidr"
+  PublicSubnet2Cidr:
+    Description: "CIDR block of public subnet in AZ B"
+    Value: !Ref PublicSubnet2Cidr
     Export:
-      Name: !Sub "${AWS::StackName}-IngressSubnet2Cidr"
-  ProxySubnet1Cidr:
-    Description: "CIDR block of proxy subnet in AZ A"
-    Value: !Ref ProxySubnet1Cidr
+      Name: !Sub "${AWS::StackName}-PublicSubnet2Cidr"
+  PrivateSubnet1Cidr:
+    Description: "CIDR block of private subnet in AZ A"
+    Value: !Ref PrivateSubnet1Cidr
     Export:
-      Name: !Sub "${AWS::StackName}-ProxySubnet1Cidr"
-  ProxySubnet2Cidr:
-    Description: "CIDR block of proxy subnet in AZ B"
-    Value: !Ref ProxySubnet2Cidr
+      Name: !Sub "${AWS::StackName}-PrivateSubnet1Cidr"
+  PrivateSubnet2Cidr:
+    Description: "CIDR block of private subnet in AZ B"
+    Value: !Ref PrivateSubnet2Cidr
     Export:
-      Name: !Sub "${AWS::StackName}-ProxySubnet2Cidr"
+      Name: !Sub "${AWS::StackName}-PrivateSubnet2Cidr"
   TgwSubnet1Cidr:
     Description: "CIDR block of TGW subnet in AZ A"
     Value: !Ref TgwSubnet1Cidr
