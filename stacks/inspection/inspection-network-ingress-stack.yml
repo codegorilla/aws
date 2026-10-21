@@ -7,15 +7,16 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Inspection ingress load balancer security group
+      GroupName: inspection-ingress-network-load-balancer-sg
       VpcId: !ImportValue inspection-network-stack-VpcId
       SecurityGroupIngress:
         - IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
+          FromPort: 80
+          ToPort: 80
           CidrIp: !ImportValue inspection-network-stack-VpcCidr
       Tags:
         - Key: Name
-          Value: "inspection-ingress-load-balancer-sg"
+          Value: "inspection-ingress-network-load-balancer-sg"
 
   InspectionIngressLoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
@@ -26,11 +27,11 @@ Resources:
       SecurityGroups:
         - !Ref InspectionIngressLoadBalancerSecurityGroup
       Subnets:
-        - !ImportValue inspection-network-stack-IngressSubnet1Id
-        - !ImportValue inspection-network-stack-IngressSubnet2Id
+        - !ImportValue inspection-network-stack-PublicSubnet1Id
+        - !ImportValue inspection-network-stack-PublicSubnet2Id
       Tags:
         - Key: Name
-          Value: "inspection-ingress-load-balancer"
+          Value: "inspection-ingress-network-load-balancer"
 
   InspectionIngressTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
@@ -38,43 +39,20 @@ Resources:
       Name: inspection-ingress-tg
       HealthCheckEnabled: true
       HealthCheckIntervalSeconds: 10
-      HealthCheckPort: 443
+      HealthCheckPort: 80
+      # This should eventually be set to HTTP
       HealthCheckProtocol: TCP
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 5
       UnhealthyThresholdCount: 2
-      Matcher: 
-        HttpCode: 200
-      Port: 443
+      # Matcher: 
+      #   HttpCode: 200
+      Port: 80
       Protocol: TCP
-      # Targets: 
-      #   - TargetDescription
+      Targets:
+        - Id: !ImportValue inspection-proxy-instance-stack-InstanceId
       TargetType: instance
       VpcId: !ImportValue inspection-network-stack-VpcId
-      Tags: 
+      Tags:
         - Key: Name
-          Value: "inspection-ingress-load-balancer"
-
-  # NATEIP:
-  #   Type: AWS::EC2::EIP
-  #   Properties:
-  #     Domain: vpc
-
-  # For now, put NAT gateway in ingress subnet, but we might break
-  # them out into a separate egress subnet later.
-
-  # NATGateway:
-  #   Type: AWS::EC2::NatGateway
-  #   Properties:
-  #     AllocationId: !GetAtt NATEIP.AllocationId
-  #     SubnetId: !ImportValue inspection-network-stack-IngressSubnetId
-  #     Tags:
-  #       - Key: Name
-  #         Value: inspection-nat-gateway
-
-  # ProxyRoute:
-  #   Type: AWS::EC2::Route
-  #   Properties:
-  #     RouteTableId: !ImportValue inspection-network-stack-ProxyRouteTableId
-  #     DestinationCidrBlock: 0.0.0.0/0
-  #     NatGatewayId: !Ref NATGateway
+          Value: "inspection-ingress-target-group"

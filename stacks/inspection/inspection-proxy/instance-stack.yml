@@ -27,6 +27,10 @@ Resources:
           FromPort: 22
           ToPort: 22
           SourceSecurityGroupId: !ImportValue inspection-network-stack-InstanceConnectEndpointSecurityGroupId
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 70.95.44.224/32
       SecurityGroupEgress:
         - IpProtocol: -1
           CidrIp: 0.0.0.0/0
@@ -107,6 +111,11 @@ Resources:
   #       - "ocp-mgmt.dev.saber.net"
 
 Outputs:
+  InstanceId:
+    Description: "ID of inspection proxy instance"
+    Value: !Ref Instance
+    Export:
+      Name: !Sub "${AWS::StackName}-InstanceId"
   SecurityGroupId:
     Description: "ID of inspection proxy security group"
     Value: !Ref SecurityGroup
