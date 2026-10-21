@@ -27,10 +27,10 @@ Resources:
           FromPort: 22
           ToPort: 22
           SourceSecurityGroupId: !ImportValue inspection-network-stack-InstanceConnectEndpointSecurityGroupId
-        - IpProtocol: tcp
-          FromPort: 80
-          ToPort: 80
-          CidrIp: 70.95.44.224/32
+        # - IpProtocol: tcp
+        #   FromPort: 80
+        #   ToPort: 80
+        #   CidrIp: 0.0.0.0/0
       SecurityGroupEgress:
         - IpProtocol: -1
           CidrIp: 0.0.0.0/0

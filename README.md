@@ -825,3 +825,22 @@ pullSecret: '{"auths":{"164599051561.dkr.ecr.us-east-2.amazonaws.com":{"auth":"Q
 sshKey: |
   ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOvLZiEZakFIg82pM8itouRfchSZyQa47g6zR8CwDNFo ec2-user@ip-10-2-0-90.us-east-2.compute.internal
   
+
+
+#!/bin/bash
+# Install EC2 Instance Connect packages
+HOST="amazon-ec2-instance-connect-us-west-2.s3.us-west-2.amazonaws.com"
+PACKAGE1="ec2-instance-connect-2.0.0-5.rhel9.x86_64.rpm"
+PACKAGE2="ec2-instance-connect-selinux-2.0.0-5.noarch.rpm"
+mkdir /tmp/ec2-instance-connect
+curl https://${HOST}/latest/linux_amd64/${PACKAGE1} -o /tmp/ec2-instance-connect/ec2-instance-connect.rpm
+curl https://${HOST}/latest/linux_amd64/${PACKAGE2} -o /tmp/ec2-instance-connect/ec2-instance-connect-selinux.rpm
+dnf install -y /tmp/ec2-instance-connect/ec2-instance-connect.rpm
+dnf install -y /tmp/ec2-instance-connect/ec2-instance-connect-selinux.rpm
+
+
+# 1. Generate the token (valid for 6 hours / 21600 seconds)
+TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+# 2. Use the token to get information
+curl -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/...
+

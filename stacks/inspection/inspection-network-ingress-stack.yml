@@ -1,6 +1,15 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: Inspection network ingress stack
 
+# To get your own IP address, visit https://checkip.amazonaws.com.
+# Use that IP with /32 appended for the IngressCidr.
+
+Parameters:
+  IngressCidr:
+    Type: String
+    Description: "The IP address range allowed"
+    Default: "10.0.0.0/16"
+
 Resources:
 
   InspectionIngressLoadBalancerSecurityGroup:
@@ -13,10 +22,23 @@ Resources:
         - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
-          CidrIp: !ImportValue inspection-network-stack-VpcCidr
+          CidrIp: !Ref IngressCidr
       Tags:
         - Key: Name
           Value: "inspection-ingress-network-load-balancer-sg"
+
+  # Update the instance security group now that the LB security group
+  # is known. This works even when preserving client IP address.
+
+  NewIngressRule:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: Allow HTTPS from inspection ingress load balancer
+      GroupId: !ImportValue inspection-proxy-instance-stack-SecurityGroupId
+      IpProtocol: tcp
+      FromPort: 80
+      ToPort: 80
+      SourceSecurityGroupId: !Ref InspectionIngressLoadBalancerSecurityGroup
 
   InspectionIngressLoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
@@ -56,3 +78,16 @@ Resources:
       Tags:
         - Key: Name
           Value: "inspection-ingress-target-group"
+
+  InspectionIngressListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref InspectionIngressTargetGroup
+      LoadBalancerArn: !Ref InspectionIngressLoadBalancer
+      Port: 80
+      Protocol: TCP
+      Tags: 
+        - Key: Name
+          Value: "inspection-ingress-listener"
