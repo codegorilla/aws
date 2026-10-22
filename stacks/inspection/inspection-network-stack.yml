@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Inspection stack
+Description: Inspection network stack
 
 Parameters:
   VpcCidr:
@@ -266,34 +266,34 @@ Outputs:
 
   # Not sure these are needed
 
-  PublicSubnet1Cidr:
-    Description: "CIDR block of public subnet in AZ A"
-    Value: !Ref PublicSubnet1Cidr
-    Export:
-      Name: !Sub "${AWS::StackName}-PublicSubnet1Cidr"
-  PublicSubnet2Cidr:
-    Description: "CIDR block of public subnet in AZ B"
-    Value: !Ref PublicSubnet2Cidr
-    Export:
-      Name: !Sub "${AWS::StackName}-PublicSubnet2Cidr"
-  PrivateSubnet1Cidr:
-    Description: "CIDR block of private subnet in AZ A"
-    Value: !Ref PrivateSubnet1Cidr
-    Export:
-      Name: !Sub "${AWS::StackName}-PrivateSubnet1Cidr"
-  PrivateSubnet2Cidr:
-    Description: "CIDR block of private subnet in AZ B"
-    Value: !Ref PrivateSubnet2Cidr
-    Export:
-      Name: !Sub "${AWS::StackName}-PrivateSubnet2Cidr"
-  TgwSubnet1Cidr:
-    Description: "CIDR block of TGW subnet in AZ A"
-    Value: !Ref TgwSubnet1Cidr
-    Export:
-      Name: !Sub "${AWS::StackName}-TgwSubnet1Cidr"
-  TgwSubnet2Cidr:
-    Description: "CIDR block of TGW subnet in AZ B"
-    Value: !Ref TgwSubnet2Cidr
-    Export:
-      Name: !Sub "${AWS::StackName}-TgwSubnet2Cidr"
+  # PublicSubnet1Cidr:
+  #   Description: "CIDR block of public subnet in AZ A"
+  #   Value: !Ref PublicSubnet1Cidr
+  #   Export:
+  #     Name: !Sub "${AWS::StackName}-PublicSubnet1Cidr"
+  # PublicSubnet2Cidr:
+  #   Description: "CIDR block of public subnet in AZ B"
+  #   Value: !Ref PublicSubnet2Cidr
+  #   Export:
+  #     Name: !Sub "${AWS::StackName}-PublicSubnet2Cidr"
+  # PrivateSubnet1Cidr:
+  #   Description: "CIDR block of private subnet in AZ A"
+  #   Value: !Ref PrivateSubnet1Cidr
+  #   Export:
+  #     Name: !Sub "${AWS::StackName}-PrivateSubnet1Cidr"
+  # PrivateSubnet2Cidr:
+  #   Description: "CIDR block of private subnet in AZ B"
+  #   Value: !Ref PrivateSubnet2Cidr
+  #   Export:
+  #     Name: !Sub "${AWS::StackName}-PrivateSubnet2Cidr"
+  # TgwSubnet1Cidr:
+  #   Description: "CIDR block of TGW subnet in AZ A"
+  #   Value: !Ref TgwSubnet1Cidr
+  #   Export:
+  #     Name: !Sub "${AWS::StackName}-TgwSubnet1Cidr"
+  # TgwSubnet2Cidr:
+  #   Description: "CIDR block of TGW subnet in AZ B"
+  #   Value: !Ref TgwSubnet2Cidr
+  #   Export:
+  #     Name: !Sub "${AWS::StackName}-TgwSubnet2Cidr"
 

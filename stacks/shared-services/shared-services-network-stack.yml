@@ -282,15 +282,17 @@ Resources:
   InstanceConnectEndpointSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Instance connect endpoint security group
+      GroupDescription: Shared services instance connect endpoint security group
       SecurityGroupEgress:
-        - IpProtocol: -1
-          CidrIp: 0.0.0.0/0
-          Description: Allow all outbound traffic to anywhere
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref VpcCidr
+          Description: Allow SSH to hosts within VPC
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: "shared-services-instance-connect-endpoint-sg"
+          Value: shared-services-instance-connect-endpoint-sg
 
   InstanceConnectEndpoint:
     Type: AWS::EC2::InstanceConnectEndpoint
