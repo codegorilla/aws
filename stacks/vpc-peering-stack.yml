@@ -2,12 +2,26 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: VPC peering stack
 
 Resources:
-  VpcPeeringConnection:
+
+  InspectionAndSharedServicesVpcPeeringConnection:
     Type: AWS::EC2::VPCPeeringConnection
     Properties:
-      VpcId: !ImportValue inspection-stack-VpcId
-      PeerVpcId: !ImportValue shared-services-stack-VpcId
+      VpcId: !ImportValue inspection-network-stack-VpcId
+      PeerVpcId: !ImportValue shared-services-network-stack-VpcId
       Tags:
-      - Key: Name
-        Value: inspection-and-shared-services-pcx
+        - Key: Name
+          Value: inspection-and-shared-services-pcx
 
+  InspectionAndSharedServicesPeerRoute1:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !ImportValue inspection-network-stack-PrivateRouteTableId
+      DestinationCidrBlock: !ImportValue shared-services-network-stack-VpcCidr
+      VpcPeeringConnectionId: !Ref InspectionAndSharedServicesVpcPeeringConnection
+
+  InspectionAndSharedServicesPeerRoute2:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !ImportValue shared-services-network-stack-AppRouteTableId
+      DestinationCidrBlock: !ImportValue inspection-network-stack-VpcCidr
+      VpcPeeringConnectionId: !Ref InspectionAndSharedServicesVpcPeeringConnection

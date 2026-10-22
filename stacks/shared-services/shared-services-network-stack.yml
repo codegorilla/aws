@@ -384,18 +384,19 @@ Outputs:
     Value: !Ref TgwSubnet2Cidr
     Export:
       Name: !Sub "${AWS::StackName}-TgwSubnet2Cidr"
-
+  VpcCidr:
+    Description: "CIDR block of VPC"
+    Value: !Ref VpcCidr
+    Export:
+      Name: !Sub "${AWS::StackName}-VpcCidr"
+  AppRouteTableId:
+    Description: "The ID of the app route table"
+    Value: !Ref AppRouteTable
+    Export:
+      Name: !Sub "${AWS::StackName}-AppRouteTableId"
+  
   # Not sure if these are needed, just copied them over from prod
-  # VpcCidr:
-  #   Description: "CIDR block of VPC"
-  #   Value: !Ref VpcCidr
-  #   Export:
-  #     Name: !Sub "${AWS::StackName}-VpcCidr"
-  # AppRouteTableId:
-  #   Description: "The ID of the app route table"
-  #   Value: !Ref AppRouteTable
-  #   Export:
-  #     Name: !Sub "${AWS::StackName}-AppRouteTableId"
+  
   # InstanceConnectEndpointSecurityGroupId:
   #   Description: "ID of instance connect endpoint security group"
   #   Value: !Ref InstanceConnectEndpointSecurityGroup

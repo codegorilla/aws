@@ -38,12 +38,16 @@ Resources:
             - !Ref SecurityGroup
           SubnetId: !ImportValue shared-services-stack-PublicSubnet1Id
       BlockDeviceMappings:
-        - DeviceName: "/dev/xvda"
+        - DeviceName: "/dev/sda1"
           Ebs:
             VolumeType: gp3
             DeleteOnTermination: true
-            VolumeSize: 10
-      IamInstanceProfile: ssm-quick-setup
+            VolumeSize: 20
+      MetadataOptions:
+        HttpEndpoint: enabled
+        HttpPutResponseHopLimit: 1
+        HttpTokens: required
+      UserData:
       Tags:
         - Key: Name
           Value: "security-group-instance"
