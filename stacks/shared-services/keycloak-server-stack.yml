@@ -18,7 +18,7 @@ Resources:
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
-          SourceSecurityGroupId: !ImportValue inspection-network-stack-InstanceConnectEndpointSecurityGroupId
+          SourceSecurityGroupId: !ImportValue shared-services-network-stack-InstanceConnectEndpointSecurityGroupId
       SecurityGroupEgress:
         - IpProtocol: -1
           CidrIp: 0.0.0.0/0
