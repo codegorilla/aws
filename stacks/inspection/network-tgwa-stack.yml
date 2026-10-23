@@ -1,0 +1,23 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Inspection network transit gateway attachment stack
+
+Resources:
+
+  TransitGatewayAttachment:
+    Type: AWS::EC2::TransitGatewayAttachment
+    Properties:
+      TransitGatewayId: !ImportValue transit-gateway-stack-TransitGatewayId
+      VpcId: !ImportValue inspection-network-stack-VpcId
+      SubnetIds:
+        - !ImportValue inspection-network-stack-TgwSubnet1Id
+        - !ImportValue inspection-network-stack-TgwSubnet2Id
+      Tags:
+        - Key: Name
+          Value: !Sub "inspection-tgwa"
+
+  PrivateRouteTableTgwRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !ImportValue inspection-network-stack-PrivateRouteTableId
+      DestinationCidrBlock: 0.0.0.0/0
+      TransitGatewayId: !Ref transit-gateway-stack-TransitGatewayId

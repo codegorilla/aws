@@ -248,6 +248,16 @@ Outputs:
     Value: !Ref PrivateSubnet2
     Export:
       Name: !Sub "${AWS::StackName}-PrivateSubnet2Id"
+  TgwSubnet1Id:
+    Description: "The ID of the TGW subnet in AZ A"
+    Value: !Ref TgwSubnet1
+    Export:
+      Name: !Sub "${AWS::StackName}-TgwSubnet1Id"
+  TgwSubnet2Id:
+    Description: "The ID of the TGW subnet in AZ B"
+    Value: !Ref TgwSubnet2
+    Export:
+      Name: !Sub "${AWS::StackName}-TgwSubnet2Id"
   VpcCidr:
     Description: "CIDR block of VPC"
     Value: !Ref VpcCidr

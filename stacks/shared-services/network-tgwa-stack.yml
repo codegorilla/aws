@@ -1,0 +1,23 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Shared services network transit gateway attachment stack
+
+Resources:
+
+  TransitGatewayAttachment:
+    Type: AWS::EC2::TransitGatewayAttachment
+    Properties:
+      TransitGatewayId: !ImportValue transit-gateway-stack-TransitGatewayId
+      VpcId: !ImportValue shared-services-network-stack-VpcId
+      SubnetIds:
+        - !ImportValue shared-services-network-stack-TgwSubnet1Id
+        - !ImportValue shared-services-network-stack-TgwSubnet2Id
+      Tags:
+        - Key: Name
+          Value: !Sub "shared-services-tgwa"
+
+  PrivateRouteTableTgwRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !ImportValue shared-services-network-stack-AppRouteTableId
+      DestinationCidrBlock: 0.0.0.0/0
+      TransitGatewayId: !Ref transit-gateway-stack-TransitGatewayId
