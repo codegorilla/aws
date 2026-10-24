@@ -6,18 +6,32 @@ Resources:
   TransitGatewayAttachment:
     Type: AWS::EC2::TransitGatewayAttachment
     Properties:
-      TransitGatewayId: !ImportValue transit-gateway-stack-TransitGatewayId
+      TransitGatewayId: !ImportValue backbone-network-stack-TransitGatewayId
       VpcId: !ImportValue shared-services-network-stack-VpcId
       SubnetIds:
         - !ImportValue shared-services-network-stack-TgwSubnet1Id
         - !ImportValue shared-services-network-stack-TgwSubnet2Id
       Tags:
         - Key: Name
-          Value: !Sub "shared-services-tgwa"
+          Value: "shared-services-tgwa"
 
   AppRouteTableTgwRoute:
     Type: AWS::EC2::Route
+    DependsOn: TransitGatewayAttachment
     Properties:
       RouteTableId: !ImportValue shared-services-network-stack-AppRouteTableId
       DestinationCidrBlock: 0.0.0.0/0
-      TransitGatewayId: !Ref transit-gateway-stack-TransitGatewayId
+      TransitGatewayId: !ImportValue backbone-network-stack-TransitGatewayId
+
+  SpokeTransitGatewayRouteTableAssociation:
+    Type: AWS::EC2::TransitGatewayRouteTableAssociation
+    Properties:
+      TransitGatewayRouteTableId: !ImportValue backbone-network-stack-SpokeTransitGatewayRouteTableId
+      TransitGatewayAttachmentId: !Ref TransitGatewayAttachment
+
+  EgressTransitGatewayRoute:
+    Type: AWS::EC2::TransitGatewayRoute
+    Properties:
+      TransitGatewayRouteTableId: !ImportValue backbone-network-stack-EgressTransitGatewayRouteTableId
+      DestinationCidrBlock: !ImportValue shared-services-network-stack-VpcCidr
+      TransitGatewayAttachmentId: !Ref TransitGatewayAttachment

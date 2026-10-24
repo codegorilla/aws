@@ -1,0 +1,69 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Egress network NAT gateway stack
+
+Resources:
+
+  NATEIP1:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+
+  # NATEIP2:
+  #   Type: AWS::EC2::EIP
+  #   Properties:
+  #     Domain: vpc
+
+  # NATEIP3:
+  #   Type: AWS::EC2::EIP
+  #   Properties:
+  #     Domain: vpc
+
+  # Only provision NAT gateway in one AZ to reduce cost
+
+  NATGateway1:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NATEIP1.AllocationId
+      SubnetId: !ImportValue egress-network-stack-PublicSubnet1Id
+      Tags:
+        - Key: Name
+          Value: egress-ngw-a
+
+  # NATGateway2:
+  #   Type: AWS::EC2::NatGateway
+  #   Properties:
+  #     AllocationId: !GetAtt NATEIP2.AllocationId
+  #     SubnetId: !ImportValue egress-network-stack-PublicSubnet2Id
+  #     Tags:
+  #       - Key: Name
+  #         Value: egress-ngw-b
+
+  # NATGateway3:
+  #   Type: AWS::EC2::NatGateway
+  #   Properties:
+  #     AllocationId: !GetAtt NATEIP3.AllocationId
+  #     SubnetId: !ImportValue egress-network-stack-PublicSubnet3Id
+  #     Tags:
+  #       - Key: Name
+  #         Value: egress-ngw-c
+
+  TgwRoute1:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !ImportValue egress-network-stack-TgwRouteTable1Id
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NATGateway1
+
+  # TgwRoute2:
+  #   Type: AWS::EC2::Route
+  #   Properties:
+  #     RouteTableId: !ImportValue egress-network-stack-TgwRouteTable2Id
+  #     DestinationCidrBlock: 0.0.0.0/0
+  #     NatGatewayId: !Ref NATGateway2
+
+  # TgwRoute3:
+  #   Type: AWS::EC2::Route
+  #   Properties:
+  #     RouteTableId: !ImportValue egress-network-stack-TgwRouteTable3Id
+  #     DestinationCidrBlock: 0.0.0.0/0
+  #     NatGatewayId: !Ref NATGateway3

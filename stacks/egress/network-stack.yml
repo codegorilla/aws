@@ -369,13 +369,29 @@ Outputs:
     Export:
       Name: !Sub "${AWS::StackName}-VpcCidr"
 
-  # Need to add TGW route tables
-
-  PrivateRouteTableId:
-    Description: "The ID of the private route table"
-    Value: !Ref PrivateRouteTable
+  PublicRouteTableId:
+    Description: "The ID of the public route table"
+    Value: !Ref PublicRouteTable
     Export:
-      Name: !Sub "${AWS::StackName}-PrivateRouteTableId"
+      Name: !Sub "${AWS::StackName}-PublicRouteTableId"
+
+  TgwRouteTable1Id:
+    Description: "The ID of TGW route table 1"
+    Value: !Ref TgwRouteTable1
+    Export:
+      Name: !Sub "${AWS::StackName}-TgwRouteTable1Id"
+
+  TgwRouteTable2Id:
+    Description: "The ID of TGW route table 2"
+    Value: !Ref TgwRouteTable2
+    Export:
+      Name: !Sub "${AWS::StackName}-TgwRouteTable2Id"
+
+  TgwRouteTable3Id:
+    Description: "The ID of TGW route table 3"
+    Value: !Ref TgwRouteTable3
+    Export:
+      Name: !Sub "${AWS::StackName}-TgwRouteTable3Id"
 
   InstanceConnectEndpointSecurityGroupId:
     Description: "ID of instance connect endpoint security group"

@@ -1,0 +1,37 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Egress network transit gateway attachment stack
+
+Resources:
+
+  TransitGatewayAttachment:
+    Type: AWS::EC2::TransitGatewayAttachment
+    Properties:
+      TransitGatewayId: !ImportValue backbone-network-stack-TransitGatewayId
+      VpcId: !ImportValue egress-network-stack-VpcId
+      SubnetIds:
+        - !ImportValue egress-network-stack-TgwSubnet1Id
+      Tags:
+        - Key: Name
+          Value: "egress-tgwa"
+
+  PublicRouteTableTgwRoute:
+    Type: AWS::EC2::Route
+    DependsOn: TransitGatewayAttachment
+    Properties:
+      RouteTableId: !ImportValue egress-network-stack-PublicRouteTableId
+      DestinationCidrBlock: 10.0.0.0/8
+      TransitGatewayId: !ImportValue backbone-network-stack-TransitGatewayId
+
+  EgressTransitGatewayRouteTableAssociation:
+    Type: AWS::EC2::TransitGatewayRouteTableAssociation
+    Properties:
+      TransitGatewayRouteTableId: !ImportValue backbone-network-stack-EgressTransitGatewayRouteTableId
+      TransitGatewayAttachmentId: !Ref TransitGatewayAttachment
+
+  SpokeTransitGatewayRoute:
+    Type: AWS::EC2::TransitGatewayRoute
+    Properties:
+      TransitGatewayRouteTableId: !ImportValue backbone-network-stack-SpokeTransitGatewayRouteTableId
+      DestinationCidrBlock: 0.0.0.0/0
+      TransitGatewayAttachmentId: !Ref TransitGatewayAttachment
+      Blackhole: false

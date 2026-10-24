@@ -20,13 +20,25 @@ Resources:
         - Key: Name
           Value: backbone-network-tgw
 
-  TransitGatewayRouteTable:
+  # This gets associated with the egress VPC TGWA
+
+  EgressTransitGatewayRouteTable:
     Type: AWS::EC2::TransitGatewayRouteTable
     Properties:
       TransitGatewayId: !Ref TransitGateway
       Tags:
         - Key: Name
-          Value: backbone-network-tgw-rtb
+          Value: backbone-network-egress-tgw-rtb
+
+  # This gets associated with all spoke VPC TGWAs
+
+  SpokeTransitGatewayRouteTable:
+    Type: AWS::EC2::TransitGatewayRouteTable
+    Properties:
+      TransitGatewayId: !Ref TransitGateway
+      Tags:
+        - Key: Name
+          Value: backbone-network-spoke-tgw-rtb
 
 Outputs:
 
@@ -36,8 +48,14 @@ Outputs:
     Export:
       Name: !Sub "${AWS::StackName}-TransitGatewayId"
 
-  TransitGatewayRouteTableId:
-    Description: "The ID of the backbone network transit gateway route table"
-    Value: !Ref TransitGatewayRouteTable
+  EgressTransitGatewayRouteTableId:
+    Description: "The ID of the backbone network egress transit gateway route table"
+    Value: !Ref EgressTransitGatewayRouteTable
     Export:
-      Name: !Sub "${AWS::StackName}-TransitGatewayRouteTableId"
+      Name: !Sub "${AWS::StackName}-EgressTransitGatewayRouteTableId"
+
+  SpokeTransitGatewayRouteTableId:
+    Description: "The ID of the backbone network spoke transit gateway route table"
+    Value: !Ref SpokeTransitGatewayRouteTable
+    Export:
+      Name: !Sub "${AWS::StackName}-SpokeTransitGatewayRouteTableId"
