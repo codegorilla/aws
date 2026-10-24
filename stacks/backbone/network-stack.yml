@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Backbone network stack
+
+Resources:
+
+  # Disabling default route table association and propagation
+  # prevents automatic creation of a default transit gateway route
+  # table. We want to create the transit gateway route table
+  # ourselves because it allows more control over network
+  # segmentation and makes the transit gateway route table ID
+  # explicitly known.
+
+  TransitGateway:
+    Type: AWS::EC2::TransitGateway
+    Properties:
+      Description: Backbone network transit gateway
+      DefaultRouteTableAssociation: disable
+      DefaultRouteTablePropagation: disable
+      Tags:
+        - Key: Name
+          Value: backbone-network-tgw
+
+  TransitGatewayRouteTable:
+    Type: AWS::EC2::TransitGatewayRouteTable
+    Properties:
+      TransitGatewayId: !Ref TransitGateway
+      Tags:
+        - Key: Name
+          Value: backbone-network-tgw-rtb
+
+Outputs:
+
+  TransitGatewayId:
+    Description: "The ID of the backbone network transit gateway"
+    Value: !Ref TransitGateway
+    Export:
+      Name: !Sub "${AWS::StackName}-TransitGatewayId"
+
+  TransitGatewayRouteTableId:
+    Description: "The ID of the backbone network transit gateway route table"
+    Value: !Ref TransitGatewayRouteTable
+    Export:
+      Name: !Sub "${AWS::StackName}-TransitGatewayRouteTableId"

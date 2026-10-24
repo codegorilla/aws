@@ -15,7 +15,7 @@ Resources:
         - Key: Name
           Value: !Sub "shared-services-tgwa"
 
-  PrivateRouteTableTgwRoute:
+  AppRouteTableTgwRoute:
     Type: AWS::EC2::Route
     Properties:
       RouteTableId: !ImportValue shared-services-network-stack-AppRouteTableId
