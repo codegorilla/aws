@@ -850,3 +850,8 @@ dnf install -y /tmp/ec2-instance-connect/ec2-instance-connect-selinux.rpm
 #dnf install -y unzip
 #unzip awscliv2.zip
 #sudo ./aws/install
+
+
+https://www.youtube.com/watch?v=CCtc9x4pjkE
+https://www.youtube.com/watch?v=S9fEydjJ9qo
+https://www.youtube.com/watch?v=9Nikqn_02Oc
